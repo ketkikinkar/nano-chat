@@ -80,3 +80,33 @@ if len(generated) == 0:
 ```
 
 **Key lesson:** RL loops fail silently — the loss becomes NaN and training appears to continue. Always add `assert not torch.isnan(loss)` at each step during development.
+
+---
+
+## Challenge 6: KV-cache off-by-one — wrong first token + wrong positional embeddings
+
+**What broke:** `generate_cached` produced different tokens from `generate_naive` on 9 of 10 random seeds, despite passing at seed=42. The single-seed test had passed by coincidence (all 8 generated tokens happened to be the same value).
+
+**Root cause:** Two interleaved bugs: (1) the first decode step fed the last prompt token as input instead of sampling a new token from the prefill logits — the first generated token was wrong; (2) positional embeddings during decode started at position 0 instead of position `T_prompt + step`, so every generated token used the wrong position encoding.
+
+**Fix:**
+```python
+# Prefill: run the full prompt once
+logits_prefill = model(ids, pos_offset=0)
+# Sample the FIRST new token from the last prefill position
+first_token = sample(logits_prefill[0, -1])
+
+# Patch model.forward to accept pos_offset for correct positions during decode
+# In decode loop: pos_offset = T_prompt + step - 1
+pos = torch.arange(pos_offset, pos_offset + T, device=device)
+
+# Multi-seed parity test to prevent recurrence
+for seed in [0, 1, 2]:
+    torch.manual_seed(seed)
+    naive = generate_naive(model, ids, max_new=8)
+    torch.manual_seed(seed)
+    cached = generate_cached(model, ids, max_new=8)
+    assert torch.equal(naive, cached), f"Parity failed at seed {seed}"
+```
+
+**Key lesson:** Test with multiple random seeds — a bug that produces the right answer at seed=42 can fail on all others. Positional embedding bugs in KV-cache are especially insidious because the model still generates *something* plausible; only exact output parity reveals the error.
