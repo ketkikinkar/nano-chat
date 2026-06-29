@@ -104,6 +104,7 @@ def rl_step(
     # Without it, the model can find degenerate completions that score high but are nonsense.
     # ref_model must be frozen (requires_grad=False) — we only back-prop through pol_lp.
     ref_model.eval()
+    # KL computed on the first completion only — cheap approximation for a demo
     full_ids = torch.cat([prompt_tokens.to(DEVICE), enc_completions[0]])
     with torch.no_grad():
         ref_lp = get_log_probs(ref_model, full_ids)

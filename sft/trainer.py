@@ -13,7 +13,6 @@ import tiktoken
 LR            = 2e-5
 MAX_EPOCHS    = 3
 BATCH_SIZE    = 4
-GRAD_ACCUM    = 4
 CHECKPOINT_DIR = "checkpoints"
 DEVICE        = "mps" if torch.backends.mps.is_available() else "cpu"
 # ──────────────────────────────────────────────────────────────────────────────
@@ -86,18 +85,17 @@ def train(data_path: str = "data/alpaca.json"):
             input_ids  = input_ids.to(DEVICE)
             loss_mask  = loss_mask.to(DEVICE)
 
+            loss = sft_loss(model, input_ids, loss_mask)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
             # set_to_none=True frees the gradient tensor memory rather than
             # zeroing it, which is faster and avoids a superfluous write
             optimizer.zero_grad(set_to_none=True)
-            for _ in range(GRAD_ACCUM):
-                loss = sft_loss(model, input_ids, loss_mask) / GRAD_ACCUM
-                loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
 
             if step % 100 == 0:
-                print(f"epoch {epoch} step {step} | loss {loss.item() * GRAD_ACCUM:.4f}")
-                loss_log.append({"step": step, "loss": loss.item() * GRAD_ACCUM})
+                print(f"epoch {epoch} step {step} | loss {loss.item():.4f}")
+                loss_log.append({"step": step, "loss": loss.item()})
             step += 1
 
     ckpt = {"model": model.state_dict(), "config": GPT2_CONFIG, "loss_log": loss_log}

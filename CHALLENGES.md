@@ -73,13 +73,13 @@ _ = model(dummy_input)   # warm up MPS JIT
 
 **Root cause:** The model occasionally generated a completion of length 0 (sampled the EOS token immediately). `get_log_probs` on an empty sequence returned 0, and the advantage computation produced NaN.
 
-**Fix:** Added a minimum-length check in `_sample`:
+**Fix:** The real protection is the epsilon in the advantage normalization — it prevents NaN whether from zero-variance reward groups or from edge-case completions:
 ```python
-if len(generated) == 0:
-    return " "   # fallback — score will be 0, which is valid
+# In advantage normalization — this epsilon is why empty completions don't crash
+advantages = (rewards - rewards.mean()) / (rewards.std() + 1e-8)
 ```
 
-**Key lesson:** RL loops fail silently — the loss becomes NaN and training appears to continue. Always add `assert not torch.isnan(loss)` at each step during development.
+**Key lesson:** Always add epsilon to std; it prevents NaN from zero-variance groups AND from edge-case completions. RL loops fail silently — the loss becomes NaN and training appears to continue. Always add `assert not torch.isnan(loss)` at each step during development.
 
 ---
 

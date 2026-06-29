@@ -119,6 +119,9 @@ def generate_with_eviction(
     The returned tensor has exactly len(prompt_ids) + max_new elements, matching
     generate_naive() semantics.  The budget_fraction controls what fraction of the
     running sequence length the eviction policy is allowed to keep.
+
+    Note: evicted state does not feed back into generation — this is a monitoring-only
+    adapter; actual sequence truncation would require a K/V injection API in GPT.
     """
     policy = SlidingWindowPolicy()
     manager = CacheManager(policy=policy, budget_fraction=budget_fraction)
