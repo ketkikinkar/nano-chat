@@ -145,18 +145,26 @@ def generate_cached(
 
     with torch.no_grad():
         # Prefill: process the entire prompt once to populate the KV caches.
-        # pos_offset=0 here so positions match the naive run exactly.
-        _ = model(ids, pos_offset=0)
+        # Capture the logits so we can sample the FIRST new token from the
+        # prefill output — no extra model call needed for that first step.
+        logits_prefill = model(ids, pos_offset=0)   # (1, T_prompt, vocab)
 
         generated = []
-        last_tok = ids[:, -1:]      # (1, 1) — last prompt token
-        for step in range(max_new):
-            total_len = T_prompt + len(generated)
-            if total_len >= model.config.block_size:
+        # Step 0: sample the first new token from prefill logits (position T_prompt-1).
+        # The prefill pass already processed the last prompt token, so we must NOT
+        # re-feed it; instead we use the logit it produced directly.
+        next_tok = _sample_token(logits_prefill[0, -1], temperature, top_k)  # (1,)
+        generated.append(next_tok.item())
+        last_tok = next_tok.unsqueeze(0)   # (1, 1) — first generated token
+
+        for step in range(1, max_new):
+            # `last_tok` is the token at absolute position T_prompt + step - 1.
+            # We have already generated `step` tokens (stored in `generated`).
+            pos = T_prompt + step - 1
+            if pos >= model.config.block_size:
                 break
-            # The new token being decoded sits at absolute position `total_len`.
-            # pos_offset ensures wpe receives the right index.
-            logits = model(last_tok, pos_offset=total_len)  # (1, 1, vocab)
+            # Feed last_tok at its correct absolute position.
+            logits = model(last_tok, pos_offset=pos)  # (1, 1, vocab)
             next_tok = _sample_token(logits[0, -1], temperature, top_k)  # (1,)
             generated.append(next_tok.item())
             last_tok = next_tok.unsqueeze(0)

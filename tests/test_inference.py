@@ -13,16 +13,24 @@ def test_output_length():
     assert out.shape == (15,), f"expected 5+10=15 tokens, got {out.shape}"
 
 def test_cached_matches_naive():
-    """KV-cache and naive generation must produce identical tokens at temperature=0."""
-    torch.manual_seed(42)
-    model = GPT(CFG); model.eval()
-    prompt = torch.randint(0, 100, (4,))
+    """KV-cache and naive generation must produce identical tokens at temperature=0.
 
-    out_naive  = generate_naive( model, prompt, max_new=8, temperature=0.0)
-    out_cached = generate_cached(model, prompt, max_new=8, temperature=0.0)
+    Tested across multiple seeds to guard against accidental correctness on a
+    single prompt/model initialisation.
+    """
+    for seed in (0, 1, 2):
+        torch.manual_seed(seed)
+        model = GPT(CFG); model.eval()
+        prompt = torch.randint(0, 100, (4,))
 
-    assert torch.equal(out_naive, out_cached), \
-        f"naive and cached outputs differ:\n{out_naive}\n{out_cached}"
+        out_naive  = generate_naive( model, prompt, max_new=8, temperature=0.0)
+        out_cached = generate_cached(model, prompt, max_new=8, temperature=0.0)
+
+        assert torch.equal(out_naive, out_cached), (
+            f"seed={seed}: naive and cached outputs differ:\n"
+            f"naive : {out_naive.tolist()}\n"
+            f"cached: {out_cached.tolist()}"
+        )
 
 def test_cached_is_faster(benchmark=None):
     """Smoke-test: cached generation completes without error."""
