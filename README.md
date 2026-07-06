@@ -23,6 +23,8 @@ Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → tr
 
 *Run on: Apple M2 Pro, 16 GB unified memory, PyTorch, macOS*
 
+See [RESULTS.md](RESULTS.md) for the full write-up — loss curves, model size breakdowns, throughput plots, attention-scaling numbers, and notebook output samples.
+
 ### Loss curves
 
 | Stage | Final train loss | Final val loss |

@@ -1,0 +1,778 @@
+% nanochat Project Walkthrough -- Clean Visual Edition
+% pdflatex nanochat-walkthrough.tex  (run twice for TOC)
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[top=1.6cm,bottom=1.8cm,left=1.4cm,right=1.4cm,includeheadfoot]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{multicol}
+\usepackage{tabularx}
+
+\tcbuselibrary{breakable,skins}
+\usetikzlibrary{arrows.meta,shapes,positioning,fit,calc,backgrounds,decorations.pathreplacing}
+
+%--- Colors
+\definecolor{C1}{RGB}{13,71,161}
+\definecolor{C2}{RGB}{25,118,210}
+\definecolor{C3}{RGB}{100,160,230}
+\definecolor{CG}{RGB}{21,128,61}
+\definecolor{CO}{RGB}{194,65,12}
+\definecolor{CR}{RGB}{153,27,27}
+\definecolor{BGL}{RGB}{245,249,255}
+\definecolor{BGT}{RGB}{220,235,255}
+\definecolor{BGT2}{RGB}{238,246,255}
+\definecolor{BGC}{RGB}{248,252,245}
+\definecolor{codekw}{RGB}{0,90,180}
+\definecolor{codecomment}{RGB}{0,120,0}
+\definecolor{codestr}{RGB}{160,32,32}
+
+%--- Listings
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\fontsize{7.5}{9.5}\selectfont,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestr},
+  numberstyle=\tiny\color{gray},
+  numbers=left, numbersep=7pt,
+  breaklines=true,
+  frame=none,
+  backgroundcolor=\color{BGC},
+  tabsize=4, showstringspaces=false,
+  morekeywords={self,True,False,None,assert,with,as,torch,nn},
+  xleftmargin=12pt, xrightmargin=4pt,
+  belowskip=2pt, aboveskip=2pt,
+}
+\lstset{style=py}
+
+%--- Boxes
+\tcbset{base/.style={enhanced,breakable,left=5pt,right=5pt,top=3pt,bottom=3pt,
+  arc=2pt,boxrule=0.8pt,fonttitle=\bfseries\sffamily\small}}
+\newtcolorbox{conceptbox}[1]{base,colback=BGL,colframe=C2,title={#1},coltitle=C1}
+\newtcolorbox{interviewbox}[1]{base,colback=BGC,colframe=CG,title={#1},coltitle=CG}
+\newtcolorbox{bonusbox}[1]{base,colback={orange!5},colframe=CO,title={#1},coltitle=CO}
+\newtcolorbox{bugbox}[1]{base,colback={red!5},colframe=CR,title={#1},coltitle=CR}
+
+%--- Lists
+\setlist[itemize]{noitemsep,topsep=2pt,parsep=0pt,leftmargin=*}
+\setlist[enumerate]{noitemsep,topsep=2pt,parsep=0pt,leftmargin=*}
+
+%--- Section headers
+\titleformat{\section}{\large\bfseries\sffamily\color{C1}}{\thesection}{0.7em}{}[\color{C3}\hrule height 0.5pt]
+\titleformat{\subsection}{\normalsize\bfseries\sffamily\color{C2}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\small\bfseries\sffamily}{\thesubsubsection}{0.4em}{}
+\titlespacing{\section}{0pt}{8pt}{3pt}
+\titlespacing{\subsection}{0pt}{4pt}{2pt}
+
+%--- Header/footer
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small\color{C2}\textsf{nanochat -- Project Walkthrough}}
+\rhead{\small\color{gray}\textsf{\leftmark}}
+\cfoot{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\hypersetup{colorlinks=true,linkcolor=C1,urlcolor=C2,pdftitle={nanochat Walkthrough}}
+
+%--- Table helpers
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcommand{\TH}[1]{\cellcolor{BGT}\textbf{\textsf{\small #1}}}
+\newcommand{\TA}{\rowcolor{BGT2}}
+
+%--- TikZ
+\tikzset{
+  blk/.style={rectangle,draw=C2,fill=BGL,thick,minimum width=2.8cm,
+    minimum height=0.65cm,align=center,font=\small\sffamily,rounded corners=2pt},
+  sblk/.style={blk,fill=BGT,minimum width=2.2cm},
+  arr/.style={-{Stealth[length=4.5pt]},thick,C2},
+  darr/.style={-{Stealth[length=4.5pt]},thick,C1},
+  lbl/.style={font=\footnotesize\sffamily\color{gray}},
+}
+
+%=============================================================================
+\begin{document}
+%=============================================================================
+
+%--- Title
+\begin{center}
+{\fontsize{21}{25}\bfseries\sffamily\color{C1} nanochat}\\[3pt]
+{\large\sffamily\color{C2} Full ChatGPT-Style Pipeline From Scratch}\\[4pt]
+{\small\color{gray}
+ GPT-2 Architecture $\cdot$ Pretraining $\cdot$ SFT $\cdot$ REINFORCE $\cdot$ KV-Cache $\cdot$
+ Apple M2 Pro (MPS) $\cdot$ 36/36 tests passing}\\[5pt]
+\hrule height 0.8pt
+\end{center}
+
+\vspace{4pt}
+
+%--- Pipeline overview table
+\noindent
+\begin{tabular}{@{}C{0.5cm}L{2.4cm}L{5.5cm}L{2.8cm}L{3.0cm}@{}}
+\toprule
+\TH{\#} & \TH{Stage} & \TH{What it does} & \TH{File(s)} & \TH{Key metric} \\
+\midrule
+1 & Architecture & Build GPT-2 transformer from scratch & \texttt{model/} & 124M or 20M params \\
+\TA 2 & Pretraining & Predict next token on raw text & \texttt{pretrain/} & Loss: 10.83 \\
+3 & SFT & Fine-tune on conversations; mask non-assistant tokens & \texttt{sft/} & Matches reference \\
+\TA 4 & RL & REINFORCE + KL penalty & \texttt{rl/} & 500 steps, G=8 \\
+5 & Inference & KV-cache: O($T$) vs naive O($T^2$) & \texttt{inference/} & \textbf{2.1x speedup} \\
+\TA 6 & Benchmarks & Loss curves, throughput, eval & \texttt{benchmarks/} & 114 vs 239 tok/s \\
+7 & Notebooks & 7 runnable notebooks, top-to-bottom & \texttt{notebooks/} & All execute OK \\
+\bottomrule
+\end{tabular}
+
+\vspace{5pt}
+\tableofcontents
+\vspace{-2pt}
+\hrule height 0.4pt
+\newpage
+
+%=============================================================================
+\section{Transformer Architecture}
+%=============================================================================
+
+\subsection{Full Model Diagram}
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[node distance=0.38cm and 1.2cm]
+
+%-- Left: component stack
+\node[blk,fill=BGT,minimum width=5.8cm] (inp) {Input IDs \quad\texttt{(B, T)}};
+\node[blk,below=of inp,minimum width=5.8cm] (wte) {\texttt{wte}: Token Embedding \quad \texttt{(B,T,768)}};
+\node[blk,below=of wte,minimum width=5.8cm] (wpe) {\texttt{wpe}: Position Embedding + Dropout};
+
+% Transformer block container
+\node[draw=C3,fill={blue!5},rounded corners=3pt,
+      below=0.55cm of wpe,minimum width=5.8cm,minimum height=2.8cm] (tbox) {};
+\node[font=\footnotesize\bfseries\sffamily\color{C1},anchor=north] at ([yshift=-5pt]tbox.north) {TransformerBlock $\times$ N};
+
+% Inside transformer block
+\coordinate (tcenter) at (tbox.center);
+\node[sblk,fill=white] at ([yshift=0.05cm]tcenter) (mlp) {\texttt{MLP}: Linear(d,4d)$\to$GELU$\to$Linear(4d,d)};
+\node[sblk,fill=white,above=0.2cm of mlp] (ln2) {\texttt{ln\_2}: LayerNorm};
+\node[sblk,fill=white,above=0.2cm of ln2] (attn) {\texttt{attn}: MultiHeadAttention};
+\node[sblk,fill=white,above=0.2cm of attn] (ln1) {\texttt{ln\_1}: LayerNorm};
+
+\node[blk,below=0.55cm of tbox,minimum width=5.8cm] (lnf) {\texttt{ln\_f}: Final LayerNorm};
+\node[blk,fill=BGT,below=of lnf,minimum width=5.8cm] (lmh)
+  {\texttt{lm\_head}: Linear $\to$ logits \quad \texttt{(B,T,50257)}};
+
+\draw[arr] (inp)--(wte); \draw[arr] (wte)--(wpe);
+\draw[arr] (wpe)--(tbox.north); \draw[arr] (tbox.south)--(lnf); \draw[arr] (lnf)--(lmh);
+
+%-- Right: annotations
+\node[lbl,right=0.5cm of tbox,align=left,text width=5.5cm] {
+  \textbf{Pre-LN residuals:}\\
+  $x \mathrel{+}= \text{Attn}(\text{LN}_1(x))$\\
+  $x \mathrel{+}= \text{MLP}(\text{LN}_2(x))$\\[6pt]
+  \textbf{TINY} (20M params):\\
+  \quad n\_layer=6, n\_head=6\\
+  \quad n\_embd=384, block=256\\[4pt]
+  \textbf{GPT2} (124M params):\\
+  \quad n\_layer=12, n\_head=12\\
+  \quad n\_embd=768, block=512\\[6pt]
+  \textbf{Weight tying:}\\
+  \texttt{lm\_head.weight = wte.weight}\\
+  \quad Saves $\approx$38M params (31\%)
+};
+
+% Weight tying dashed arrow
+\draw[darr,dashed] ([xshift=2pt]lmh.east) -- ++(0.22,0)
+  |- ([xshift=2pt]wte.east) node[midway,right,lbl]{shared};
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Multi-Head Attention Diagram}
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[node distance=0.38cm and 0.7cm]
+
+\node[blk,fill=BGT,minimum width=9.5cm] (x) {Input $x$ \quad \texttt{(B, T, C)} where $C =$ n\_embd};
+
+\node[blk,below=of x,minimum width=9.5cm,fill={blue!6}]
+  (qkv) {Fused \texttt{c\_attn}: Linear($C$, $3C$) \quad \small\color{CO}[single matmul = faster]};
+
+\node[sblk,below=0.55cm of qkv,xshift=-2.9cm] (q) {$Q$ \small $(B,T,C)$};
+\node[sblk,below=0.55cm of qkv] (k) {$K$ \small $(B,T,C)$};
+\node[sblk,below=0.55cm of qkv,xshift=2.9cm] (v) {$V$ \small $(B,T,C)$};
+\draw[arr] (qkv.south)--++(0,-0.2)-|(q.north);
+\draw[arr] (qkv.south)--(k.north);
+\draw[arr] (qkv.south)--++(0,-0.2)-|(v.north);
+
+\node[sblk,fill={green!8},below=of q,minimum width=2.2cm] (qr) {\small reshape\\$(B,n_h,T,d_h)$};
+\node[sblk,fill={green!8},below=of k,minimum width=2.2cm] (kr) {\small reshape\\$(B,n_h,T,d_h)$};
+\node[sblk,fill={green!8},below=of v,minimum width=2.2cm] (vr) {\small reshape\\$(B,n_h,T,d_h)$};
+\draw[arr] (q)--(qr); \draw[arr] (k)--(kr); \draw[arr] (v)--(vr);
+
+\node[blk,below=0.6cm of kr,minimum width=5.8cm,fill={yellow!10}]
+  (sdp) {scores $= QK^\top / \sqrt{d_h}$ \;\;then causal mask \;\; then softmax};
+\node[blk,below=of sdp,minimum width=5.8cm,fill={yellow!10}]
+  (out) {out $=$ weights $\cdot V$ \quad reshape to $(B, T, C)$};
+
+\draw[arr] (qr.south)--++(0,-0.3)-|(sdp.north west);
+\draw[arr] (kr.south)--(sdp.north);
+\draw[arr] (vr.south)--++(0,-0.85)-|(out.north east);
+\draw[arr] (sdp)--(out);
+
+\node[blk,below=of out,minimum width=5.8cm,fill=BGT] (proj) {\texttt{c\_proj}: Linear($C,C$) + dropout};
+\draw[arr] (out)--(proj);
+
+\node[lbl,right=0.6cm of sdp,align=left,text width=4.8cm] {
+  $d_h = C/n_h = 768/12 = 64$\\[3pt]
+  Scaling by $\sqrt{d_h}=8$\\
+  prevents softmax saturation\\[4pt]
+  Causal mask: future positions\\
+  set to $-\infty$ before softmax\\[4pt]
+  No mask needed during\\
+  single-token KV-cache decode
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Architecture Comparison Table}
+
+\begin{center}
+\small
+\begin{tabular}{@{}L{3.0cm}L{5.0cm}L{6.2cm}@{}}
+\toprule
+\TH{Design choice} & \TH{What we use} & \TH{Why} \\
+\midrule
+Normalization & Pre-LN ($x \mathrel{+}= f(\text{LN}(x))$) & Stable gradients; no warmup needed \\
+\TA Attention & Fused QKV (one Linear, 3$\times$ output) & One matmul is faster than three; cleaner code \\
+Causal mask & \texttt{register\_buffer} (lower triangular) & Moves to device with model; not a parameter \\
+\TA MLP width & $4\times$ expansion (d $\to$ 4d $\to$ d) & Empirically optimal for GPT-class models \\
+MLP activation & GELU & Smoother than ReLU; GPT-2 standard \\
+\TA Weight tying & \texttt{lm\_head.weight = wte.weight} & Saves 38M params; principled (same role) \\
+Init std & 0.02 (Normal) & Keeps residual stream small at init \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%=============================================================================
+\section{GPT-2 Weight Loading}
+%=============================================================================
+
+\begin{center}
+\small
+\begin{tabular}{@{}L{3.4cm}C{2.8cm}C{2.8cm}L{4.4cm}@{}}
+\toprule
+\TH{Layer} & \TH{HF Conv1D shape} & \TH{Our Linear shape} & \TH{Fix required} \\
+\midrule
+\texttt{c\_attn.weight} & $(C,\;3C)$ = (in, out) & $(3C,\;C)$ = (out, in) & \texttt{.t()} transpose \\
+\TA \texttt{c\_proj.weight} & $(C,\;C)$ transposed & $(C,\;C)$ normal & \texttt{.t()} \\
+\texttt{mlp.c\_fc.weight} & $(C,\;4C)$ & $(4C,\;C)$ & \texttt{.t()} \\
+\TA \texttt{mlp.c\_proj.weight} & $(4C,\;C)$ & $(C,\;4C)$ & \texttt{.t()} \\
+All others & correct & correct & direct \texttt{copy\_()} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[caption={Weight loader transpose check (model/gpt.py)}]
+needs_transpose = any(hf_key.endswith(t) for t in
+    ["attn.c_attn.weight","attn.c_proj.weight","mlp.c_fc.weight","mlp.c_proj.weight"])
+with torch.no_grad():
+    if needs_transpose:
+        sd[our_key].copy_(hf_val.t())   # .t() flips (in,out) -> (out,in)
+    else:
+        sd[our_key].copy_(hf_val)
+\end{lstlisting}
+
+%=============================================================================
+\section{Pretraining}
+%=============================================================================
+
+\subsection{Data Pipeline}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.35cm and 0.85cm]
+\node[blk,fill=BGT] (raw) {Raw text};
+\node[blk,right=of raw] (tok) {tiktoken BPE};
+\node[blk,right=of tok] (bin) {\texttt{.bin} uint16\\memmap};
+\node[blk,right=of bin] (bat) {\texttt{get\_batch}\\random slices};
+\node[blk,right=of bat,fill=BGT] (xy) {\texttt{(x, y)}\\$y = x[\text{shifted}]$};
+\draw[arr] (raw)--(tok);\draw[arr] (tok)--(bin);
+\draw[arr] (bin)--(bat);\draw[arr] (bat)--(xy);
+\node[lbl,below=0.12cm of tok] {50257 vocab}; \node[lbl,below=0.12cm of bin] {2 bytes/tok};
+\node[lbl,below=0.12cm of bat] {rand start}; \node[lbl,below=0.12cm of xy] {next-tok pairs};
+\end{tikzpicture}
+\end{center}
+
+\subsection{Training Setup}
+
+\begin{center}
+\small
+\begin{tabular}{@{}L{3.2cm}L{2.0cm}L{8.8cm}@{}}
+\toprule
+\TH{Hyperparameter} & \TH{Value} & \TH{Why} \\
+\midrule
+LR schedule & Cosine & High LR early (fast), decays smoothly to near-zero (precise) \\
+\TA Warmup steps & 200 & Random init: high LR too early can diverge before weights stabilize \\
+Grad clip & 1.0 & Bounds gradient norm; one bad batch cannot corrupt weights \\
+\TA Init loss & 10.82 & $\ln(50257)$: sanity check that weights are uniform over vocab \\
+Measured init & 10.8294 & Confirms correct data pipeline and no bugs in loss computation \\
+\TA Device & MPS & Metal Performance Shaders -- Apple Silicon GPU \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Why the Initial Loss Equals $\ln(50257)$}
+
+At initialization all weights $\sim\mathcal{N}(0, 0.02)$, so logits $\approx 0$. Softmax of all-zero logits is
+uniform over 50257 tokens. Cross-entropy of a uniform distribution:
+$-\log(1/50257) = \ln(50257) \approx 10.82$. Our measured value is 10.8294 -- gap $<0.01$ confirms
+correct pipeline.
+
+%=============================================================================
+\section{Supervised Fine-Tuning (SFT)}
+%=============================================================================
+
+\subsection{ChatML Format and What Gets Masked}
+
+\begin{center}
+\begin{tikzpicture}
+
+% Draw token boxes
+\def\tokdata{
+  {"<im\_start>",0},
+  {"system",0},
+  {"You are...",0},
+  {"<im\_end>",0},
+  {"<im\_start>",0},
+  {"user",0},
+  {"What is 2+2?",0},
+  {"<im\_end>",0},
+  {"<im\_start>",0},
+  {"assistant",1},
+  {"4.",1},
+  {"<im\_end>",1}
+}
+
+\foreach \i/\tok/\msk in {
+  0/<im\_start>/0, 1/system/0, 2/You are.../0, 3/<im\_end>/0,
+  4/<im\_start>/0, 5/user/0, 6/What is 2+2?/0, 7/<im\_end>/0,
+  8/<im\_start>/0, 9/assistant/1, 10/4./1, 11/<im\_end>/1}
+{
+  \pgfmathparse{\i*1.31}
+  \edef\xpos{\pgfmathresult}
+  \ifnum\msk=1
+    \node[draw=CG,fill={green!15},minimum width=1.24cm,minimum height=0.52cm,
+          align=center,font=\fontsize{5.5}{7}\ttfamily,rounded corners=1pt]
+      at (\xpos,0) (T\i) {\tok};
+    \node[font=\fontsize{5.5}{7}\sffamily,below=0.05cm of T\i,color=CG] {mask=1};
+  \else
+    \node[draw=gray!50,fill={gray!8},minimum width=1.24cm,minimum height=0.52cm,
+          align=center,font=\fontsize{5.5}{7}\ttfamily\color{gray!70},rounded corners=1pt]
+      at (\xpos,0) (T\i) {\tok};
+    \node[font=\fontsize{5.5}{7}\sffamily,below=0.05cm of T\i,color=gray] {mask=0};
+  \fi
+}
+
+\draw[decorate,decoration={brace,amplitude=4pt,mirror},CR,thick]
+  ([yshift=-0.9cm]T0.south west)--([yshift=-0.9cm]T8.south east)
+  node[midway,below=3pt,font=\fontsize{7}{9}\sffamily\color{gray}]
+    {System + user: no loss (mask=0)};
+\draw[decorate,decoration={brace,amplitude=4pt,mirror},CG,thick]
+  ([yshift=-0.9cm]T9.south west)--([yshift=-0.9cm]T11.south east)
+  node[midway,below=3pt,font=\fontsize{7}{9}\sffamily\color{CG}]
+    {Assistant tokens: loss computed here (mask=1)};
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{SFT Loss Function}
+
+\begin{lstlisting}[caption={Complete SFT loss (sft/trainer.py)}]
+def sft_loss(model, input_ids, loss_mask):
+    B, T  = input_ids.shape
+    logits  = model(input_ids)                     # (B, T, vocab_size)
+    logits  = logits[:, :-1, :].contiguous()       # drop last (no target)
+    targets = input_ids[:, 1:].contiguous()        # shift: target[t] = input[t+1]
+    mask    = loss_mask[:, 1:].contiguous()        # align mask with shifted targets
+
+    per_token = F.cross_entropy(logits.view(-1, vocab_size),
+                                targets.view(-1), reduction="none").view(B, T-1)
+    denom = mask.sum()
+    if denom == 0:
+        return torch.tensor(0.0, requires_grad=True)
+    return (per_token * mask).sum() / denom        # average over ASSISTANT tokens only
+\end{lstlisting}
+
+\subsection{The Critical Denominator Choice}
+
+\begin{center}
+\small
+\begin{tabular}{@{}L{4.0cm}C{2.2cm}C{2.2cm}L{5.4cm}@{}}
+\toprule
+\TH{Scenario} & \TH{mask.sum()} & \TH{seq\_len} & \TH{Effect if using seq\_len} \\
+\midrule
+Short prompt + long answer\newline(10 + 100 tokens) & 100 & 110 & 1.1x dilution --- acceptable \\
+\TA Long prompt + short answer\newline(500 + 10 tokens) & 10 & 510 & \textbf{51x dilution} --- gradient disappears \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%=============================================================================
+\section{Reinforcement Learning}
+%=============================================================================
+
+\subsection{RL Loop Diagram}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.4cm and 0.7cm]
+\node[blk,fill=BGT,minimum width=2.8cm] (pr) {Prompt};
+\node[blk,right=0.8cm of pr] (samp) {Sample G=8\\completions};
+\node[blk,right=0.8cm of samp] (rew) {Score each\\$r_i \in [0,1]$};
+\node[blk,right=0.8cm of rew] (norm) {Normalize:\\$\hat{A}_i = (r_i-\bar{r})/(\sigma_r+\epsilon)$};
+
+\node[blk,fill={yellow!10},below=0.9cm of norm,minimum width=2.8cm] (kl)
+  {KL: $\log\pi_\theta - \log\pi_\text{SFT}$};
+\node[blk,fill={yellow!10},left=0.8cm of kl,minimum width=2.8cm] (pg)
+  {PG loss:\\ $-\hat{A}_i \cdot \log\pi_\theta(y_i|x)$};
+\node[blk,left=0.8cm of pg,fill=BGT] (upd) {Total loss:\\ PG + 0.1*KL};
+\node[blk,left=0.8cm of upd,fill=BGT] (nxt) {optimizer.step\\next prompt};
+
+\draw[arr] (pr)--(samp);\draw[arr] (samp)--(rew);
+\draw[arr] (rew)--(norm);\draw[arr] (norm)--(kl);
+\draw[arr] (kl)--(pg);\draw[arr] (pg)--(upd);\draw[arr] (upd)--(nxt);
+\draw[arr] (nxt.south)--++(0,-0.3)-|([xshift=-0.4cm]pr.south)--(pr.south);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Key RL Equations and Intuition}
+
+\begin{center}
+\small
+\begin{tabular}{@{}L{5.2cm}L{9.0cm}@{}}
+\toprule
+\TH{Formula} & \TH{Intuition} \\
+\midrule
+$\hat{A}_i = (r_i - \bar{r}) / (\sigma_r + 10^{-8})$ &
+  Group-relative: "this was 2 std above group mean." Scale-invariant.
+  $\epsilon$ prevents div-by-zero when all rewards are identical. \\
+\TA $\mathcal{L}_\text{PG} = -\hat{A}_i \cdot \log\pi_\theta(y_i|x)$ &
+  Negative sign: PyTorch minimizes, we want to maximize reward.
+  High-$\hat{A}$ completions get increased log-prob. \\
+$\mathcal{L}_\text{KL} = \log\pi_\theta(y) - \log\pi_\text{SFT}(y)$ &
+  Divergence from frozen SFT ref. Prevents reward hacking (gaming rules
+  with degenerate text). KL coeff 0.1 = 1 nat of KL costs 0.1 loss. \\
+\TA $\mathcal{L} = \mathcal{L}_\text{PG} + 0.1 \cdot \mathcal{L}_\text{KL}$ &
+  Final loss. Tradeoff: $\alpha{\to}0$ = pure RL, hacking.
+  $\alpha{\to}\infty$ = frozen model, no learning. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%=============================================================================
+\section{KV-Cache Inference}
+%=============================================================================
+
+\subsection{Naive vs Cached: Visual}
+
+\begin{center}
+\begin{tikzpicture}
+
+%-- Naive side (left)
+\node[font=\small\bfseries\sffamily\color{CR}] at (2.6,4.1) {Naive  O($T^2$)};
+\foreach \s/\n in {1/1,2/2,3/3,4/4,5/5}{
+  \pgfmathsetmacro{\y}{3.7 - \s*0.65}
+  \foreach \t in {1,...,\n}{
+    \pgfmathsetmacro{\x}{\t*0.72 - 0.36}
+    \node[draw=C3,fill=BGL,minimum width=0.66cm,minimum height=0.44cm,
+          rounded corners=1pt,font=\fontsize{6}{7}\sffamily] at (\x,\y) {$t_\t$};
+  }
+  \node[lbl,right] at (5.1*0.72,\y) {step \s: recompute \n tok};
+}
+\node[font=\fontsize{6.5}{8}\sffamily\color{CR},align=center] at (2.6,0.2)
+  {Every step re-runs the\\entire context through attention};
+
+%-- Cached side (right)
+\node[font=\small\bfseries\sffamily\color{CG}] at (11.3,4.1) {KV-Cache  O($T$)};
+\foreach \s/\n in {1/1,2/2,3/3,4/4,5/5}{
+  \pgfmathsetmacro{\y}{3.7 - \s*0.65}
+  \foreach \t in {1,...,\n}{
+    \pgfmathsetmacro{\x}{7.6 + \t*0.72 - 0.36}
+    \pgfmathparse{int(\t == \n)}
+    \ifnum\pgfmathresult=1
+      \node[draw=CG,fill={green!15},minimum width=0.66cm,minimum height=0.44cm,
+            rounded corners=1pt,font=\fontsize{6}{7}\sffamily] at (\x,\y) {$t_\t$};
+    \else
+      \node[draw=gray!40,fill={gray!7},minimum width=0.66cm,minimum height=0.44cm,
+            rounded corners=1pt,font=\fontsize{6}{7}\sffamily\color{gray!50}] at (\x,\y) {$t_\t$};
+    \fi
+  }
+  \node[lbl,right] at (7.6+5.1*0.72,\y) {step \s: 1 new tok only};
+}
+\node[font=\fontsize{6.5}{8}\sffamily\color{CG},align=center] at (11.3,0.2)
+  {Green = new token; gray = cached K,V\\reused from prior steps};
+
+% Divider
+\draw[gray!35,dashed] (6.1,-0.1)--(6.1,4.3);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Complexity Comparison}
+
+\begin{center}
+\small
+\begin{tabular}{@{}L{3.8cm}C{2.8cm}C{2.8cm}L{4.0cm}@{}}
+\toprule
+\TH{Property} & \TH{Naive} & \TH{KV-Cache} & \TH{Notes} \\
+\midrule
+Time per step & $O(T^2)$ & $O(T)$ & $T$ = total tokens so far \\
+\TA Memory usage & $O(1)$ & $O(T \cdot L \cdot H \cdot d_h)$ & Grows with context length \\
+Throughput (M2 Pro) & 114.3 tok/s & 239.1 tok/s & Measured on MPS \\
+\TA Speedup & 1.0x & \textbf{2.1x} & Increases with longer sequences \\
+KV size (512 ctx, GPT2) & -- & $\approx$37 MB & $2\times12\times12\times512\times64\times4$ bytes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[caption={Prefill + decode with pos\_offset (inference/generate.py)}]
+logits_prefill = model(ids, pos_offset=0)             # run full prompt ONCE
+next_tok = _sample_token(logits_prefill[0, -1], ...)  # first NEW token from prefill
+generated, last_tok = [next_tok.item()], next_tok.unsqueeze(0)
+
+for step in range(1, max_new):
+    pos = T_prompt + step - 1          # absolute position -- critical for parity
+    logits = model(last_tok, pos_offset=pos)
+    next_tok = _sample_token(logits[0, -1], ...)
+    generated.append(next_tok.item())
+    last_tok = next_tok.unsqueeze(0)
+\end{lstlisting}
+
+%=============================================================================
+\section{All 6 Challenges}
+%=============================================================================
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}C{0.4cm}L{2.6cm}L{4.2cm}L{4.2cm}L{2.7cm}@{}}
+\toprule
+\TH{\#} & \TH{Bug} & \TH{Root cause} & \TH{Fix} & \TH{Key lesson} \\
+\midrule
+1 & SFT loss off-by-one &
+  logit[t] predicts token[t+1]; shift must be applied to logits, targets, AND mask &
+  \texttt{logits[:,:-1]}, \texttt{targets[:,1:]}, \texttt{mask[:,1:]} &
+  Draw index alignment before coding \\
+\TA 2 & Wrong denominator &
+  \texttt{seq\_len} dilutes gradient 51x on long prompts + short answers &
+  \texttt{(loss*mask).sum() / mask.sum()} &
+  Denominator controls effective LR \\
+3 & Conv1D transpose &
+  HF stores $(in,out)$; \texttt{nn.Linear} expects $(out,in)$; 4 layers affected &
+  \texttt{.t()} on those 4 weight tensors &
+  Validate logits vs HF reference \\
+\TA 4 & MPS JIT warmup &
+  First MPS call compiles graph: 10x slower than subsequent calls &
+  One dummy forward before timing loop &
+  Report mean of warm runs, not first \\
+5 & RL NaN loss &
+  All G=8 completions get same reward; std=0; division produces NaN &
+  \texttt{rewards.std() + 1e-8} &
+  Assert \texttt{not isnan(loss)} in RL \\
+\TA 6 & KV-cache off-by-one (2 bugs) &
+  Wrong first token + positional embeddings start at 0 not $T_\text{prompt}$+step &
+  Sample from prefill logits + pos\_offset patch &
+  Multi-seed parity test \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+%=============================================================================
+\section{Interview Questions --- Standard Level}
+%=============================================================================
+
+\begin{multicols}{2}
+\footnotesize
+
+\begin{interviewbox}{Q1: Why scale attention by $\sqrt{d_k}$?}
+Dot products have std $= \sqrt{d_k}$.
+With $d_k=64$, std$=8$: softmax is nearly one-hot, gradients vanish.
+Dividing by $\sqrt{64}=8$ restores std$\approx1$, keeps all heads trainable.
+\end{interviewbox}
+
+\begin{interviewbox}{Q2: What is weight tying and what does it save?}
+\texttt{lm\_head.weight = wte.weight} shares the same tensor.
+Same job, opposite directions. Saves $50257\times768 \approx 38.6$M params (31\% of GPT-2).
+Test with \texttt{is}, not \texttt{==}.
+\end{interviewbox}
+
+\begin{interviewbox}{Q3: Why must SFT use mask.sum() not seq\_len?}
+Only assistant tokens contribute to numerator.
+Using \texttt{seq\_len}: 500-token prompt + 10-token answer = 51x dilution.
+\texttt{mask.sum()} = 10 = correct denominator. Loss is always average over assistant tokens only.
+\end{interviewbox}
+
+\begin{interviewbox}{Q4: How does KV-cache work?}
+Keys+values for prior tokens don't change between steps.
+Compute once (prefill), cache, reuse.
+Each new step processes ONE token: O($T$) not O($T^2$).
+Tradeoff: $O(T\cdot L\cdot H\cdot d_h)$ memory grows with context.
+\end{interviewbox}
+
+\begin{interviewbox}{Q5: What is group-relative advantage?}
+Normalize within G completions: $\hat{A}_i=(r_i-\bar{r})/(\sigma_r+\epsilon)$.
+"Reward 0.7 when mean=0.3, std=0.2" becomes $+2.0\sigma$ signal.
+Scale-invariant across prompts.
+$\epsilon=10^{-8}$ prevents div-by-zero.
+\end{interviewbox}
+
+\begin{interviewbox}{Q6: Why is a KL penalty needed in RL?}
+Without it: reward hacking.
+Model finds degenerate completions that score high but are nonsense
+(e.g., "!!!.!.!." for punctuation reward).
+KL anchors to frozen SFT ref.
+$\alpha=0.1$: 1 nat of KL costs 0.1 in loss.
+\end{interviewbox}
+
+\begin{interviewbox}{Q7: Pre-LN vs Post-LN?}
+Pre-LN: $x \mathrel{+}= f(\text{LN}(x))$.
+Residual bypasses LN -- clean gradient highway.
+Post-LN puts LN on residual, causing gradient instability.
+Pre-LN: higher LR safe, no warmup required. GPT-2 onward uses Pre-LN.
+\end{interviewbox}
+
+\begin{interviewbox}{Q8: Hardest bug in this project?}
+KV-cache off-by-one. Passed seed=42 by coincidence (all 8 tokens were identical value). Failed 9/10 other seeds. Two bugs: wrong first token + positions started at 0.
+Found by: \texttt{torch.equal(naive, cached)} for seeds 0,1,2.
+\end{interviewbox}
+
+\end{multicols}
+
+%=============================================================================
+\section{Bonus Questions --- Frontier Lab Depth}
+%=============================================================================
+
+\begin{multicols}{2}
+\footnotesize
+
+\begin{bonusbox}{B1: Prove why $\sqrt{d_k}$ is the right scale}
+$q,k\!\sim\!\mathcal{N}(0,1)$. $q{\cdot}k = \sum q_i k_i$.
+Each term variance $= E[q_i^2 k_i^2] = 1$.
+Sum of $d_k$ iid: $q{\cdot}k \sim \mathcal{N}(0,d_k)$, std $= \sqrt{d_k}$.
+Dividing by $\sqrt{d_k}$ normalizes to std$=1$.
+\end{bonusbox}
+
+\begin{bonusbox}{B2: RLHF vs this project?}
+This: REINFORCE + rule-based reward.
+RLHF: PPO + learned reward model from human A-vs-B comparisons.
+PPO clips update ratio (stable). Reward model from thousands of labels.
+KL structure identical. This is RLHF-lite: same architecture, no human labels.
+\end{bonusbox}
+
+\begin{bonusbox}{B3: KV-cache memory at scale?}
+$2\!\times\!L\!\times\!B\!\times\!H\!\times\!T\!\times\!d_h\!\times\!\text{bytes}$.
+Hypothetical GPT-4 ($L{=}96$, $H{=}96$, $T{=}128$K, $d_h{=}128$, bf16):
+$\approx 305$ GB. Solutions: GQA (share KV heads), sliding-window eviction, int8 KV quant, PagedAttention.
+\end{bonusbox}
+
+\begin{bonusbox}{B4: Reward hacking and KL tradeoff?}
+$\mathcal{L}=-\mathbb{E}[r]+\alpha D_\text{KL}$.
+$\alpha{\to}0$: pure RL, degenerate outputs.
+$\alpha{\to}\infty$: frozen at SFT.
+Rule: larger $\alpha$ when reward is noisy; smaller when trustworthy.
+Sweet spot: 0.1--0.3 for demos.
+\end{bonusbox}
+
+\begin{bonusbox}{B5: Why does causal mask break in KV-cache?}
+Prefill: need lower-triangular mask ($T{\times}T$).
+Decode: query is LAST position -- should attend to ALL cached tokens -- no mask needed.
+Applying prefill mask to a decode step clips incorrectly.
+Fix: skip mask when $T=1$.
+\end{bonusbox}
+
+\begin{bonusbox}{B6: Scaling to GPT-3?}
+Architecture: GQA, RoPE, bf16.
+Training: FSDP (model sharding), activation checkpointing (recompute in backward), grad clip critical.
+Inference: Flash Attention (O($T$) memory via tiling), speculative decoding (draft + verify), PagedAttention for batching.
+\end{bonusbox}
+
+\begin{bonusbox}{B7: Prove Pre-LN gradient stability}
+Post-LN backward: $\partial\mathcal{L}/\partial x$ passes through $\partial\text{LN}/\partial(x+f(x))$.
+At depth, $x+f(x)$ has large norm; LN Jacobian $\propto 1/\text{norm}$ destabilizes.
+Pre-LN: $\partial\mathcal{L}/\partial x = I + (\ldots)$.
+$I$ is gradient highway -- exists regardless of depth. LN input always unit variance.
+\end{bonusbox}
+
+\begin{bonusbox}{B8: Why does init loss equal $\ln(50257)$?}
+Weights $\sim\mathcal{N}(0,0.02)$: logits$\approx0$. Softmax of zeros = uniform over 50257.
+Cross-entropy of uniform: $-\log(1/50257) = \ln(50257) \approx 10.82$.
+Measured: 10.8294. Gap $<0.01$ = no pipeline bugs.
+\end{bonusbox}
+
+\end{multicols}
+
+%=============================================================================
+\section{Quick Reference}
+%=============================================================================
+
+\begin{multicols}{2}
+
+\textbf{Key Equations}
+\begin{center}
+\small
+\begin{tabular}{@{}L{3.0cm}L{3.5cm}@{}}
+\toprule
+\TH{Name} & \TH{Formula} \\
+\midrule
+Attention & $\text{softmax}(QK^\top/\sqrt{d_k})V$ \\
+\TA SFT loss & $\sum_t\ell_t m_t / \sum_t m_t$ \\
+Advantage & $(r_i-\bar{r})/(\sigma_r+\epsilon)$ \\
+\TA RL total loss & $\mathcal{L}_\text{PG} + 0.1\cdot\mathcal{L}_\text{KL}$ \\
+Cosine LR & $\text{lr\_min}+\frac{1}{2}\Delta(1+\cos\frac{\pi t}{T})$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\columnbreak
+
+\textbf{Function Signatures}
+\begin{center}
+\small
+\begin{tabular}{@{}L{6.5cm}@{}}
+\toprule
+\TH{Signature and return type} \\
+\midrule
+\texttt{GPT.forward(idx[B,T])} $\to$ \texttt{[B,T,V]} \\
+\TA \texttt{get\_batch(split, block, batch, dev)} $\to$ \texttt{(x,y)} \\
+\texttt{build\_batch(convos, enc, block)} $\to$ \texttt{(ids,mask)|None} \\
+\TA \texttt{sft\_loss(model, ids, mask)} $\to$ scalar \\
+\texttt{compute\_reward(text:str)} $\to$ float $\in [0,1]$ \\
+\TA \texttt{generate\_naive(model, ids, n)} $\to$ tokens \\
+\texttt{generate\_cached(model, ids, n)} $\to$ tokens (2.1x) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{multicols}
+
+\vfill
+\begin{center}
+\small\color{gray}
+nanochat $\cdot$ Project \#2 of 8 $\cdot$ Apple M2 Pro $\cdot$ 36/36 tests $\cdot$
+Pretrain loss 10.83 $\cdot$ KV-cache 2.1x speedup
+\end{center}
+
+\end{document}

@@ -8,3 +8,8 @@ __pycache__/
 *.egg-info/
 .DS_Store
 .ipynb_checkpoints/
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+RESUME_ADDITIONS.txt
