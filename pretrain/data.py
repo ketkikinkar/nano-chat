@@ -13,7 +13,7 @@ def get_batch(
     """Sample a random batch from the memory-mapped token file.
 
     Tokens are stored as uint16 (vocab_size=50257 fits in 2 bytes, halving disk use).
-    Cast to int64 at batch time — PyTorch embedding layers require int64.
+    Cast to int64 at batch time - PyTorch embedding layers require int64.
 
     Args:
         split: "train" or "val" split name.

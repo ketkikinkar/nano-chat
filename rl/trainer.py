@@ -16,7 +16,7 @@ DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
 @dataclass
 class RLConfig:
     G:              int   = 8      # completions per prompt
-    kl_coeff:       float = 0.1    # weight on KL penalty — prevents reward hacking
+    kl_coeff:       float = 0.1    # weight on KL penalty - prevents reward hacking
     lr:             float = 1e-5
     max_steps:      int   = 500
     max_new_tokens: int   = 64
@@ -27,7 +27,7 @@ def get_log_probs(model: GPT, token_ids: Tensor) -> Tensor:
 
     Used both for the policy gradient loss and the KL penalty.
     token_ids is a 1-D sequence; we shift by one so each token
-    predicts the next — standard causal LM teacher-forcing.
+    predicts the next - standard causal LM teacher-forcing.
     """
     ids = token_ids.unsqueeze(0)      # (1, T)
     logits = model(ids)               # (1, T, vocab)
@@ -43,7 +43,7 @@ def _sample(model: GPT, prompt: Tensor, max_new: int, enc: tiktoken.Encoding) ->
     """Autoregressive sampling with temperature=0.8.
 
     Temperature < 1 sharpens the distribution, trading diversity for
-    coherence — important so the reward signal doesn't collapse to noise.
+    coherence - important so the reward signal doesn't collapse to noise.
     """
     model.eval()
     with torch.no_grad():
@@ -102,9 +102,9 @@ def rl_step(
 
     # 4. KL penalty: keeps RL model close to the SFT checkpoint.
     # Without it, the model can find degenerate completions that score high but are nonsense.
-    # ref_model must be frozen (requires_grad=False) — we only back-prop through pol_lp.
+    # ref_model must be frozen (requires_grad=False) - we only back-prop through pol_lp.
     ref_model.eval()
-    # KL computed on the first completion only — cheap approximation for a demo
+    # KL computed on the first completion only - cheap approximation for a demo
     full_ids = torch.cat([prompt_tokens.to(DEVICE), enc_completions[0]])
     with torch.no_grad():
         ref_lp = get_log_probs(ref_model, full_ids)
@@ -145,7 +145,7 @@ def train(sft_ckpt_path: str = "checkpoints/tiny_pretrain.pt"):
     reward_log = []
     for step in range(rl_cfg.max_steps):
         prompt = prompt_ids[step % len(prompt_ids)]
-        # set_to_none=True avoids zeroing gradients — frees memory instead
+        # set_to_none=True avoids zeroing gradients - frees memory instead
         optimizer.zero_grad(set_to_none=True)
         loss = rl_step(model, ref_model, prompt, rl_cfg, enc)
         loss.backward()

@@ -1,6 +1,6 @@
 # nanochat
 
-Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → transformer architecture → pretraining → SFT → RL → KV-cache inference — on Apple M2 Pro.
+Full ChatGPT-style pipeline implemented from scratch - BPE tokenization → transformer architecture → pretraining → SFT → RL → KV-cache inference - on Apple M2 Pro.
 
 **Series:** Project #2 of 8 | Builds on: [bpe-tokenizer](../bpe-tokenizer) · [kvcache](../kvcache)
 
@@ -12,7 +12,7 @@ Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → tr
 |---|---|---|
 | Transformer architecture | From scratch in PyTorch | ✓ |
 | Pretraining (TinyShakespeare) | From scratch | ✓ |
-| SFT loop | **From scratch — primary differentiator** | ✓ |
+| SFT loop | **From scratch - primary differentiator** | ✓ |
 | RL (REINFORCE + KL) | From scratch | ✓ |
 | KV-cache inference | Adapted from kvcache project | ✓ |
 | Chat UI | nanochat-mlx reference | ✓ |
@@ -23,14 +23,14 @@ Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → tr
 
 *Run on: Apple M2 Pro, 16 GB unified memory, PyTorch, macOS*
 
-See [RESULTS.md](RESULTS.md) for the full write-up — loss curves, model size breakdowns, throughput plots, attention-scaling numbers, and notebook output samples.
+See [RESULTS.md](RESULTS.md) for the full write-up - loss curves, model size breakdowns, throughput plots, attention-scaling numbers, and notebook output samples.
 
 ### Loss curves
 
 | Stage | Final train loss | Final val loss |
 |---|---|---|
 | Pretrain (TinyShakespeare, 5K steps) | 10.8294 | 10.8337 |
-| SFT (Alpaca, 3 epochs) | Within tolerance | — |
+| SFT (Alpaca, 3 epochs) | Within tolerance | - |
 
 ### Inference throughput
 
@@ -104,10 +104,10 @@ uv run pytest tests/ -v --tb=short
 
 ## Key design decisions
 
-**Why SFT divides by `mask.sum()` not `seq_len`:** Prevents long prompts from diluting the gradient signal. The model trains on assistant tokens only — averaging over them (not over the full sequence) keeps the effective learning rate constant regardless of prompt length.
+**Why SFT divides by `mask.sum()` not `seq_len`:** Prevents long prompts from diluting the gradient signal. The model trains on assistant tokens only - averaging over them (not over the full sequence) keeps the effective learning rate constant regardless of prompt length.
 
 **Why we scale attention by `√d_k`:** Dot products grow in variance proportional to `d_k`. Without scaling, softmax saturates and attention collapses to one token ("hard" attention). Scaling keeps the distribution spread.
 
-**Why KV-cache is O(T) not O(T²):** Each new token only needs to attend to prior tokens — their K, V matrices are cached. Without a cache, every generation step re-computes attention over the entire prior context.
+**Why KV-cache is O(T) not O(T²):** Each new token only needs to attend to prior tokens - their K, V matrices are cached. Without a cache, every generation step re-computes attention over the entire prior context.
 
 **Why group-relative advantage in RL:** Raw rewards have no consistent scale across prompts. Normalising within the group `(r - mean)/std` makes "this completion was 1.5σ above average" a stable, comparable signal.

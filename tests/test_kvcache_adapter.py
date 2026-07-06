@@ -2,7 +2,7 @@
 import sys
 import os
 
-# Make the kvcache project importable — it lives as a sibling to nanochat
+# Make the kvcache project importable - it lives as a sibling to nanochat
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../kvcache"))
 
 import torch

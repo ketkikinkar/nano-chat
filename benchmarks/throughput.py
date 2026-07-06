@@ -12,7 +12,7 @@ N_RUNS      = 5
 DEVICE      = "mps" if torch.backends.mps.is_available() else "cpu"
 
 def measure(fn, model, prompt, label):
-    # Warm up MPS JIT — first call is always slow
+    # Warm up MPS JIT - first call is always slow
     fn(model, prompt, max_new=8, temperature=0.0)
     times = []
     for _ in range(N_RUNS):
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     model.eval()
     prompt = torch.randint(0, 50257, (PROMPT_LEN,)).to(DEVICE)
 
-    print(f"\nThroughput benchmark — {DEVICE} | GPT-2 small (124M) | prompt={PROMPT_LEN} | gen={MAX_NEW}")
+    print(f"\nThroughput benchmark - {DEVICE} | GPT-2 small (124M) | prompt={PROMPT_LEN} | gen={MAX_NEW}")
     print("-" * 65)
     tps_naive  = measure(generate_naive,  model, prompt, "naive (no cache)")
     tps_cached = measure(generate_cached, model, prompt, "KV-cache")

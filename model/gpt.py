@@ -75,7 +75,7 @@ class GPT(nn.Module):
 
         for hf_key, hf_val in sd_hf.items():
             if "lm_head" in hf_key:
-                continue  # tied with wte — skip
+                continue  # tied with wte - skip
             our_key = hf_to_ours(hf_key)
             if our_key not in sd:
                 continue

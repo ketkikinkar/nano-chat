@@ -6,8 +6,7 @@ H2O, AEGE) for long-context generation.  This adapter extracts the raw K, V and
 attention-weight tensors from each attention layer at every decode step and hands
 them to CacheManager.step(), which runs the chosen eviction policy.
 
-The adapter does NOT make evicted tokens invisible to the GPT forward pass —
-nanochat's GPT has no K/V injection API.  Instead, the adapter is a *monitoring*
+The adapter does NOT make evicted tokens invisible to the GPT forward pass - nanochat's GPT has no K/V injection API.  Instead, the adapter is a *monitoring*
 layer: it runs the eviction bookkeeping in the kvcache project so that the cache
 state is tracked, while greedy token generation proceeds identically to
 generate_naive().  This satisfies the task contract (output length) and plugs
@@ -15,7 +14,7 @@ nanochat into the kvcache project's CacheManager interface.
 
 If the GPT were extended with a K/V injection API (e.g. via monkey-patching
 similar to generate_cached), the evicted state could be used to truncate the
-running sequence — that is left as a future extension.
+running sequence - that is left as a future extension.
 """
 from __future__ import annotations
 import math
@@ -51,8 +50,8 @@ def _extract_kv_and_weights(
     weights_per_layer: list[Tensor] = []
 
     # Intercept each attention layer's forward to capture intermediate tensors.
-    # We do this via a temporary forward override — the same pattern used by
-    # generate_cached — so no architectural changes to GPT are required.
+    # We do this via a temporary forward override - the same pattern used by
+    # generate_cached - so no architectural changes to GPT are required.
     captured: list[dict] = [{} for _ in model.blocks]
 
     def _make_hook(layer_idx: int):
@@ -90,7 +89,7 @@ def _extract_kv_and_weights(
     try:
         _ = model(ids)
     finally:
-        # Always restore — avoids leaving the model in a patched state
+        # Always restore - avoids leaving the model in a patched state
         for i in range(len(model.blocks)):
             del model.blocks[i].attn.forward
 
@@ -120,7 +119,7 @@ def generate_with_eviction(
     generate_naive() semantics.  The budget_fraction controls what fraction of the
     running sequence length the eviction policy is allowed to keep.
 
-    Note: evicted state does not feed back into generation — this is a monitoring-only
+    Note: evicted state does not feed back into generation - this is a monitoring-only
     adapter; actual sequence truncation would require a K/V injection API in GPT.
     """
     policy = SlidingWindowPolicy()
@@ -156,7 +155,7 @@ def generate_with_eviction(
             if current_len >= model.config.block_size:
                 break
 
-            # Feed the full growing sequence — naive O(T²) approach.
+            # Feed the full growing sequence - naive O(T²) approach.
             # We need fresh K/V/weights at each step for the manager, so we
             # re-run the full sequence through the hooked forward.
             full_ids = torch.cat(

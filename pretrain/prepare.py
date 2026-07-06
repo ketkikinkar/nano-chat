@@ -1,4 +1,4 @@
-"""Run once: python pretrain/prepare.py — downloads TinyShakespeare, tokenizes to data/."""
+"""Run once: python pretrain/prepare.py - downloads TinyShakespeare, tokenizes to data/."""
 import os
 import requests
 import tiktoken

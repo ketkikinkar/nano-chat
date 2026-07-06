@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 05 — Supervised Fine-Tuning
+# # 05 - Supervised Fine-Tuning
 # Shows the loss mask side-by-side with tokens. This is the differentiator.
 
 # %%
@@ -10,7 +10,7 @@ from sft.data import format_conversation, build_batch
 enc = tiktoken.get_encoding("gpt2")
 
 # %% [markdown]
-# ## Visualise the loss mask — the most important concept in SFT
+# ## Visualise the loss mask - the most important concept in SFT
 
 # %%
 convo = [
@@ -31,7 +31,7 @@ for i, (tok_id, m) in enumerate(zip(ids[:60], mask[:60])):
     print(f"{tok:>12}  {tok_id:>6}  {m:>6.1f}  {trains}")
 
 # %% [markdown]
-# ## Before vs after masking — loss comparison
+# ## Before vs after masking - loss comparison
 
 # %%
 from model.config import GPT2_CONFIG

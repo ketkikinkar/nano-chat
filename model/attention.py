@@ -12,7 +12,7 @@ class MultiHeadAttention(nn.Module):
         self.head_dim = config.n_embd // config.n_head
         self.dropout = config.dropout
 
-        # Single projection for Q, K, V — one matmul instead of three (faster on MPS)
+        # Single projection for Q, K, V - one matmul instead of three (faster on MPS)
         self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=True)
         self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=True)
         self.attn_drop = nn.Dropout(config.dropout)

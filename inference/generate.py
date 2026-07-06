@@ -64,7 +64,7 @@ def generate_cached(
     each tensor shape (1, n_head, seq_so_far, head_dim).
 
     Positional embeddings must be offset during decode so that the new token's
-    position matches what naive generation would compute — otherwise logits differ.
+    position matches what naive generation would compute - otherwise logits differ.
     """
     model.eval()
 
@@ -97,7 +97,7 @@ def generate_cached(
 
             # q attends over the full cached sequence.
             # No causal mask is needed during single-token decode because q is
-            # always the *last* position — it should attend to all prior tokens.
+            # always the *last* position - it should attend to all prior tokens.
             scale = math.sqrt(head_dim)
             scores = (q @ k_full.transpose(-2, -1)) / scale  # (B, nh, T, seq_so_far)
 
@@ -130,7 +130,7 @@ def generate_cached(
         B, T = idx.shape
         assert T + pos_offset <= self_model.config.block_size
         device = idx.device
-        # Shift positional indices by offset — critical for decode parity
+        # Shift positional indices by offset - critical for decode parity
         pos = torch.arange(pos_offset, pos_offset + T, device=device)
         x = self_model.drop(self_model.wte(idx) + self_model.wpe(pos))
         for block in self_model.blocks:
@@ -146,7 +146,7 @@ def generate_cached(
     with torch.no_grad():
         # Prefill: process the entire prompt once to populate the KV caches.
         # Capture the logits so we can sample the FIRST new token from the
-        # prefill output — no extra model call needed for that first step.
+        # prefill output - no extra model call needed for that first step.
         logits_prefill = model(ids, pos_offset=0)   # (1, T_prompt, vocab)
 
         generated = []
@@ -155,7 +155,7 @@ def generate_cached(
         # re-feed it; instead we use the logit it produced directly.
         next_tok = _sample_token(logits_prefill[0, -1], temperature, top_k)  # (1,)
         generated.append(next_tok.item())
-        last_tok = next_tok.unsqueeze(0)   # (1, 1) — first generated token
+        last_tok = next_tok.unsqueeze(0)   # (1, 1) - first generated token
 
         for step in range(1, max_new):
             # `last_tok` is the token at absolute position T_prompt + step - 1.
@@ -169,7 +169,7 @@ def generate_cached(
             generated.append(next_tok.item())
             last_tok = next_tok.unsqueeze(0)
 
-    # Restore original forward methods — remove monkey-patches so the model is
+    # Restore original forward methods - remove monkey-patches so the model is
     # left in the same state it was found in.
     for i in range(len(model.blocks)):
         del model.blocks[i].attn.forward   # reveals the class method underneath

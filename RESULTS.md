@@ -1,6 +1,6 @@
 # Results
 
-All numbers below come from actual runs on this machine (Apple M2 Pro, 16 GB unified memory) — either from checkpoint metadata, the test suite, or the executed notebooks under `notebooks/`. Plots referenced here are checked into `benchmarks/plots/`.
+All numbers below come from actual runs on this machine (Apple M2 Pro, 16 GB unified memory) - either from checkpoint metadata, the test suite, or the executed notebooks under `notebooks/`. Plots referenced here are checked into `benchmarks/plots/`.
 
 ## Test suite
 
@@ -20,7 +20,7 @@ Loss log from `checkpoints/tiny_pretrain.pt`:
 | 25 | 10.8785 | 10.8774 |
 | 49 | 10.8294 | 10.8337 |
 
-`ln(50257) ≈ 10.82` — the near-random-init cross-entropy for a 50257-token vocabulary. These losses confirm the model starts at (and, at this checkpoint, remains near) the theoretical random-init value, which is the expected sanity-check behavior for a tiny model this early in training rather than evidence of a fully converged run.
+`ln(50257) ≈ 10.82` - the near-random-init cross-entropy for a 50257-token vocabulary. These losses confirm the model starts at (and, at this checkpoint, remains near) the theoretical random-init value, which is the expected sanity-check behavior for a tiny model this early in training rather than evidence of a fully converged run.
 
 ![Pretrain loss curve](benchmarks/plots/pretrain_loss.png)
 
@@ -33,7 +33,7 @@ Loss log from `checkpoints/tiny_pretrain.pt`:
 | `TINY_CONFIG` | 6 | 6 | 384 | 256 | ~30.0M (embedding table dominates at this scale) |
 | `GPT2_CONFIG` | 12 | 12 | 768 | 512 | ~124.0M |
 
-(From `notebooks/03_transformer.ipynb`. The 50257-token vocabulary means the tied `wte`/`lm_head` embedding accounts for ~19.3M of the Tiny config's params alone — larger than the transformer blocks themselves at this scale.)
+(From `notebooks/03_transformer.ipynb`. The 50257-token vocabulary means the tied `wte`/`lm_head` embedding accounts for ~19.3M of the Tiny config's params alone - larger than the transformer blocks themselves at this scale.)
 
 ## Inference throughput
 
@@ -61,7 +61,7 @@ Verified causal masking: the attention-weight matrix is exactly lower-triangular
 
 ## SFT and RL
 
-- **SFT**: `checkpoints/sft.pt` is not present in this checkout — `notebooks/05_sft.ipynb`'s live-checkpoint demo cell reflects that with `"Run sft/trainer.py first to generate checkpoints/sft.pt"`. Loss-masking correctness itself is verified independently by `tests/test_sft_data.py` and `tests/test_sft_trainer.py`.
+- **SFT**: `checkpoints/sft.pt` is not present in this checkout - `notebooks/05_sft.ipynb`'s live-checkpoint demo cell reflects that with `"Run sft/trainer.py first to generate checkpoints/sft.pt"`. Loss-masking correctness itself is verified independently by `tests/test_sft_data.py` and `tests/test_sft_trainer.py`.
 - **RL**: `checkpoints/rl.pt` is likewise not present. `notebooks/06_rl.ipynb` demonstrates group-relative advantage normalization on a synthetic reward batch:
 
 ```

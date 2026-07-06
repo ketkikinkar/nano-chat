@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 01 — Tokenization
+# # 01 - Tokenization
 # Connects to the bpe-tokenizer project. Shows WHY tokenization matters.
 
 # %%
@@ -9,7 +9,7 @@ enc = tiktoken.get_encoding("gpt2")
 
 # %% [markdown]
 # ## The leading-space difference
-# "hello" and " hello" are DIFFERENT tokens — GPT-2 was trained this way.
+# "hello" and " hello" are DIFFERENT tokens - GPT-2 was trained this way.
 
 # %%
 print(enc.encode("hello"))    # [31373]
@@ -26,7 +26,7 @@ for s in ["Hello, world!", "2+2=4", "日本語テスト", "🎉🔥"]:
     print(f"  {s!r:30s} → {ids}")
 
 # %% [markdown]
-# ## Tokenization of numbers — why LLMs struggle with arithmetic
+# ## Tokenization of numbers - why LLMs struggle with arithmetic
 
 # %%
 for n in ["100", "1000", "10000", "99999"]:

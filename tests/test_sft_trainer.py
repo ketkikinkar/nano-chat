@@ -51,4 +51,4 @@ def test_all_zero_mask_raises():
     ids  = torch.randint(0, 100, (2, 16))
     mask = torch.zeros(2, 16)
     loss = sft_loss(model, ids, mask)
-    assert not torch.isnan(loss), "all-zero mask produced NaN — add guard"
+    assert not torch.isnan(loss), "all-zero mask produced NaN - add guard"

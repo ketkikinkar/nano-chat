@@ -22,7 +22,7 @@ def eval_perplexity(model: GPT, split: str = "val") -> float:
     return math.exp(sum(losses) / len(losses))
 
 if __name__ == "__main__":
-    print("\nEval — val-set perplexity per checkpoint (lower = better)")
+    print("\nEval - val-set perplexity per checkpoint (lower = better)")
     print("-" * 50)
 
     for name, path in [
@@ -36,4 +36,4 @@ if __name__ == "__main__":
             ppl = eval_perplexity(model)
             print(f"  {name:<25} perplexity = {ppl:.2f}")
         except FileNotFoundError:
-            print(f"  {name:<25} (checkpoint not found — run training first)")
+            print(f"  {name:<25} (checkpoint not found - run training first)")

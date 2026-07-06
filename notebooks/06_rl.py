@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 06 — Reinforcement Learning
+# # 06 - Reinforcement Learning
 # Shows reward curve, KL divergence, and a reward-hacking example.
 
 # %%
@@ -22,7 +22,7 @@ except FileNotFoundError:
     print("Run rl/trainer.py first.")
 
 # %% [markdown]
-# ## Group-relative advantage — why we normalise rewards within the group
+# ## Group-relative advantage - why we normalise rewards within the group
 
 # %%
 import numpy as np
@@ -31,4 +31,4 @@ advantages  = (rewards_raw - rewards_raw.mean()) / (rewards_raw.std() + 1e-8)
 print("Raw rewards:       ", rewards_raw.round(2))
 print("Group advantages:  ", advantages.round(2))
 print("Mean reward:       ", rewards_raw.mean().round(3))
-# Advantages sum to ~0 — the model updates toward above-average completions
+# Advantages sum to ~0 - the model updates toward above-average completions

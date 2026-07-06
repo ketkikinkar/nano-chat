@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a full ChatGPT-style pipeline from scratch — GPT architecture → pretrain → SFT → RL → KV-cache inference — on Apple M2 Pro, with the SFT loop as the primary differentiator.
+**Goal:** Build a full ChatGPT-style pipeline from scratch - GPT architecture → pretrain → SFT → RL → KV-cache inference - on Apple M2 Pro, with the SFT loop as the primary differentiator.
 
 **Architecture:** PyTorch (MPS backend) primary; each pipeline stage is a self-contained module. The SFT trainer is implemented from scratch and validated against nanochat-mlx. Two training tracks: tiny (~20M) on TinyShakespeare and GPT-2 small (124M) for SFT.
 
@@ -11,12 +11,12 @@
 ## Global Constraints
 
 - Python 3.11+ required
-- `uv` for all package management — no pip install directly
+- `uv` for all package management - no pip install directly
 - PyTorch MPS backend: `device = "mps" if torch.backends.mps.is_available() else "cpu"`
 - All test configs use `TINY_CONFIG` (n_layer=2, n_head=4, n_embd=64, block_size=16, vocab_size=100) for speed
 - TDD: write failing test → run → implement → run → commit
 - Comment the WHY, not the what
-- No premature abstractions — build what the next task needs, nothing more
+- No premature abstractions - build what the next task needs, nothing more
 - Checkpoints saved to `checkpoints/` (gitignored)
 - `set_to_none=True` in all `optimizer.zero_grad()` calls
 
@@ -103,13 +103,13 @@ Expected: resolves and installs without errors.
 uv run pytest tests/ -v
 ```
 
-Expected: `no tests ran` — zero errors, zero failures.
+Expected: `no tests ran` - zero errors, zero failures.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add pyproject.toml .gitignore model/ pretrain/ sft/ rl/ inference/ benchmarks/ tests/ data/ checkpoints/ docs/ notebooks/ ui/
-git commit -m "feat: project scaffolding — uv, directories, packages"
+git commit -m "feat: project scaffolding - uv, directories, packages"
 ```
 
 ---
@@ -153,7 +153,7 @@ def test_gpt2_config():
     assert GPT2_CONFIG.block_size == 512
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_config.py -v
@@ -186,7 +186,7 @@ TINY_CONFIG = GPTConfig(n_layer=6, n_head=6, n_embd=384, block_size=256, vocab_s
 GPT2_CONFIG = GPTConfig(n_layer=12, n_head=12, n_embd=768, block_size=512, vocab_size=50257)
 ```
 
-- [ ] **Step 4: Run — expect all pass**
+- [ ] **Step 4: Run - expect all pass**
 
 ```bash
 uv run pytest tests/test_config.py -v
@@ -203,7 +203,7 @@ git commit -m "feat: GPTConfig dataclass with TINY and GPT2 presets"
 
 ---
 
-### Task 3: model/attention.py — MultiHeadAttention
+### Task 3: model/attention.py - MultiHeadAttention
 
 **Files:**
 - Create: `model/attention.py`
@@ -211,7 +211,7 @@ git commit -m "feat: GPTConfig dataclass with TINY and GPT2 presets"
 
 **Interfaces:**
 - Consumes: `from model.config import GPTConfig`
-- Produces: `MultiHeadAttention(config: GPTConfig)` — `forward(x: Tensor[B,T,C]) -> Tensor[B,T,C]`
+- Produces: `MultiHeadAttention(config: GPTConfig)` - `forward(x: Tensor[B,T,C]) -> Tensor[B,T,C]`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -250,7 +250,7 @@ def test_head_dim_assertion():
         bad_cfg = GPTConfig(n_embd=65, n_head=4)  # 65 not divisible by 4
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_attention.py -v
@@ -273,7 +273,7 @@ class MultiHeadAttention(nn.Module):
         self.head_dim = config.n_embd // config.n_head
         self.dropout = config.dropout
 
-        # Single projection for Q, K, V — one matmul instead of three (faster on MPS)
+        # Single projection for Q, K, V - one matmul instead of three (faster on MPS)
         self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=True)
         self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=True)
         self.attn_drop = nn.Dropout(config.dropout)
@@ -312,7 +312,7 @@ class MultiHeadAttention(nn.Module):
         return self.resid_drop(self.c_proj(out))
 ```
 
-- [ ] **Step 4: Run — expect all pass**
+- [ ] **Step 4: Run - expect all pass**
 
 ```bash
 uv run pytest tests/test_attention.py -v
@@ -329,7 +329,7 @@ git commit -m "feat: MultiHeadAttention with causal mask (TDD)"
 
 ---
 
-### Task 4: model/blocks.py — MLP + TransformerBlock
+### Task 4: model/blocks.py - MLP + TransformerBlock
 
 **Files:**
 - Create: `model/blocks.py`
@@ -337,7 +337,7 @@ git commit -m "feat: MultiHeadAttention with causal mask (TDD)"
 
 **Interfaces:**
 - Consumes: `from model.config import GPTConfig`, `from model.attention import MultiHeadAttention`
-- Produces: `TransformerBlock(config: GPTConfig)` — `forward(x: Tensor[B,T,C]) -> Tensor[B,T,C]`
+- Produces: `TransformerBlock(config: GPTConfig)` - `forward(x: Tensor[B,T,C]) -> Tensor[B,T,C]`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -366,7 +366,7 @@ def test_residual_preserves_input_scale():
     assert out.std().item() < x.std().item() * 5.0, "output scale exploded"
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_blocks.py -v
@@ -410,7 +410,7 @@ class TransformerBlock(nn.Module):
         return x
 ```
 
-- [ ] **Step 4: Run — expect all pass**
+- [ ] **Step 4: Run - expect all pass**
 
 ```bash
 uv run pytest tests/test_blocks.py -v
@@ -427,7 +427,7 @@ git commit -m "feat: MLP + TransformerBlock with Pre-LN residuals (TDD)"
 
 ---
 
-### Task 5: model/gpt.py — Full GPT + GPT-2 weight loader
+### Task 5: model/gpt.py - Full GPT + GPT-2 weight loader
 
 **Files:**
 - Create: `model/gpt.py`
@@ -436,8 +436,8 @@ git commit -m "feat: MLP + TransformerBlock with Pre-LN residuals (TDD)"
 **Interfaces:**
 - Consumes: `TransformerBlock`, `GPTConfig`
 - Produces:
-  - `GPT(config: GPTConfig)` — `forward(idx: Tensor[B,T]) -> Tensor[B,T,vocab_size]`
-  - `GPT.from_pretrained(model_type: str) -> GPT` — loads HuggingFace GPT-2 weights
+  - `GPT(config: GPTConfig)` - `forward(idx: Tensor[B,T]) -> Tensor[B,T,vocab_size]`
+  - `GPT.from_pretrained(model_type: str) -> GPT` - loads HuggingFace GPT-2 weights
 
 - [ ] **Step 1: Write failing tests**
 
@@ -482,7 +482,7 @@ def test_loss_at_init_near_log_vocab():
         f"loss at init {loss.item():.2f} too far from log(vocab)={expected:.2f}"
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_gpt.py -v
@@ -571,7 +571,7 @@ class GPT(nn.Module):
 
         for hf_key, hf_val in sd_hf.items():
             if "lm_head" in hf_key:
-                continue  # tied with wte — skip
+                continue  # tied with wte - skip
             our_key = hf_to_ours(hf_key)
             if our_key not in sd:
                 continue
@@ -587,7 +587,7 @@ class GPT(nn.Module):
         return model
 ```
 
-- [ ] **Step 4: Run — expect all pass**
+- [ ] **Step 4: Run - expect all pass**
 
 ```bash
 uv run pytest tests/test_gpt.py -v
@@ -595,7 +595,7 @@ uv run pytest tests/test_gpt.py -v
 
 Expected: 4 passed.
 
-- [ ] **Step 5: Smoke-test GPT-2 loading (manual, not in test suite — requires download)**
+- [ ] **Step 5: Smoke-test GPT-2 loading (manual, not in test suite - requires download)**
 
 ```bash
 uv run python -c "
@@ -621,7 +621,7 @@ git commit -m "feat: full GPT model with weight tying + GPT-2 HF loader (TDD)"
 
 ---
 
-### Task 6: pretrain/data.py — TinyShakespeare data pipeline
+### Task 6: pretrain/data.py - TinyShakespeare data pipeline
 
 **Files:**
 - Create: `pretrain/data.py`
@@ -675,7 +675,7 @@ def test_dtype_is_int64(tmp_path):
     assert x.dtype == torch.long
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_pretrain_data.py -v
@@ -699,7 +699,7 @@ def get_batch(
     """Sample a random batch from the memory-mapped token file.
 
     Tokens are stored as uint16 (vocab_size=50257 fits in 2 bytes, halving disk use).
-    Cast to int64 at batch time — PyTorch embedding layers require int64.
+    Cast to int64 at batch time - PyTorch embedding layers require int64.
     """
     path = os.path.join(data_dir, f"{split}.bin")
     data = np.memmap(path, dtype=np.uint16, mode="r")
@@ -717,7 +717,7 @@ def get_batch(
 - [ ] **Step 4: Implement pretrain/prepare.py (download + tokenize)**
 
 ```python
-"""Run once: python pretrain/prepare.py — downloads TinyShakespeare, tokenizes to data/."""
+"""Run once: python pretrain/prepare.py - downloads TinyShakespeare, tokenizes to data/."""
 import os, requests, tiktoken, numpy as np
 
 DATA_URL = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
@@ -776,7 +776,7 @@ git commit -m "feat: pretrain data pipeline + TinyShakespeare downloader (TDD)"
 
 ---
 
-### Task 7: pretrain/train.py — Training loop
+### Task 7: pretrain/train.py - Training loop
 
 **Files:**
 - Create: `pretrain/train.py`
@@ -812,7 +812,7 @@ DEVICE           = "mps" if torch.backends.mps.is_available() else "cpu"
 # ──────────────────────────────────────────────────────────────────────────────
 
 def get_lr(step: int) -> float:
-    # Linear warmup then cosine decay — standard for transformer pretraining
+    # Linear warmup then cosine decay - standard for transformer pretraining
     if step < WARMUP_STEPS:
         return MAX_LR * step / WARMUP_STEPS
     if step > MAX_STEPS:
@@ -908,7 +908,7 @@ git commit -m "feat: pretraining loop with cosine LR + gradient accumulation (MP
 
 ---
 
-### Task 8: sft/data.py — ChatML format + loss mask
+### Task 8: sft/data.py - ChatML format + loss mask
 
 **Files:**
 - Create: `sft/data.py`
@@ -916,8 +916,8 @@ git commit -m "feat: pretraining loop with cosine LR + gradient accumulation (MP
 
 **Interfaces:**
 - Produces:
-  - `format_conversation(turns: list[dict]) -> str` — formats to ChatML string
-  - `build_batch(conversations: list[list[dict]], tokenizer, block_size) -> tuple[Tensor, Tensor]` — returns `(input_ids [B,T], loss_mask [B,T])`
+  - `format_conversation(turns: list[dict]) -> str` - formats to ChatML string
+  - `build_batch(conversations: list[list[dict]], tokenizer, block_size) -> tuple[Tensor, Tensor]` - returns `(input_ids [B,T], loss_mask [B,T])`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -944,9 +944,9 @@ def test_format_contains_special_tokens():
 def test_loss_mask_only_on_assistant_tokens():
     input_ids, loss_mask = build_batch([SAMPLE_CONVO], ENC, block_size=128)
     # mask must be 1.0 on SOME tokens (the assistant response)
-    assert loss_mask.sum() > 0, "loss mask is all zeros — no assistant tokens masked"
+    assert loss_mask.sum() > 0, "loss mask is all zeros - no assistant tokens masked"
     # mask must NOT cover all tokens (prompt tokens should be 0)
-    assert loss_mask.sum() < loss_mask.numel(), "loss mask covers everything — prompt not excluded"
+    assert loss_mask.sum() < loss_mask.numel(), "loss mask covers everything - prompt not excluded"
 
 def test_loss_mask_dtype():
     input_ids, loss_mask = build_batch([SAMPLE_CONVO], ENC, block_size=128)
@@ -955,7 +955,7 @@ def test_loss_mask_dtype():
 def test_empty_assistant_turn_skipped():
     bad_convo = [
         {"role": "user",      "content": "Hello?"},
-        {"role": "assistant", "content": ""},   # empty — should be skipped
+        {"role": "assistant", "content": ""},   # empty - should be skipped
     ]
     result = build_batch([bad_convo], ENC, block_size=128)
     assert result is None, "expected None for empty assistant turn"
@@ -977,7 +977,7 @@ def test_multi_turn_masks_each_assistant():
     assert loss_mask.sum() > mask_single.sum(), "multi-turn should mask more tokens than single-turn"
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_sft_data.py -v
@@ -991,7 +991,7 @@ import numpy as np
 import torch
 from tiktoken import Encoding
 
-# ChatML special tokens — used by nanochat and many open models
+# ChatML special tokens - used by nanochat and many open models
 IM_START = "<|im_start|>"
 IM_END   = "<|im_end|>"
 
@@ -1019,7 +1019,7 @@ def build_batch(
     for turns in conversations:
         ids, mask = _encode_with_mask(turns, tokenizer, block_size)
         if ids is None:
-            return None   # empty assistant turn — caller must skip this sample
+            return None   # empty assistant turn - caller must skip this sample
         all_ids.append(ids)
         all_masks.append(mask)
 
@@ -1048,7 +1048,7 @@ def _encode_with_mask(
         f_ids = tokenizer.encode_ordinary(footer)
 
         is_assistant = (turn["role"] == "assistant")
-        # Only compute loss on assistant tokens — grading the model on what IT generates
+        # Only compute loss on assistant tokens - grading the model on what IT generates
         h_mask = [0.0] * len(h_ids)
         c_mask = [1.0 if is_assistant else 0.0] * len(c_ids)
         f_mask = [0.0] * len(f_ids)
@@ -1073,7 +1073,7 @@ def _encode_with_mask(
     return np.array(ids, dtype=np.int64), np.array(mask, dtype=np.float32)
 ```
 
-- [ ] **Step 4: Run — expect all pass**
+- [ ] **Step 4: Run - expect all pass**
 
 ```bash
 uv run pytest tests/test_sft_data.py -v
@@ -1085,12 +1085,12 @@ Expected: 5 passed.
 
 ```bash
 git add sft/data.py tests/test_sft_data.py
-git commit -m "feat: SFT data pipeline — ChatML format + loss mask builder (TDD)"
+git commit -m "feat: SFT data pipeline - ChatML format + loss mask builder (TDD)"
 ```
 
 ---
 
-### Task 9: sft/trainer.py — SFT loss + training loop
+### Task 9: sft/trainer.py - SFT loss + training loop
 
 **Files:**
 - Create: `sft/trainer.py`
@@ -1160,10 +1160,10 @@ def test_all_zero_mask_raises():
     ids  = torch.randint(0, 100, (2, 16))
     mask = torch.zeros(2, 16)
     loss = sft_loss(model, ids, mask)
-    assert not torch.isnan(loss), "all-zero mask produced NaN — add guard"
+    assert not torch.isnan(loss), "all-zero mask produced NaN - add guard"
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_sft_trainer.py -v
@@ -1172,7 +1172,7 @@ uv run pytest tests/test_sft_trainer.py -v
 - [ ] **Step 3: Implement sft/trainer.py**
 
 ```python
-"""SFT training loop — the primary differentiator of this project."""
+"""SFT training loop - the primary differentiator of this project."""
 from __future__ import annotations
 import os, math, json
 import torch
@@ -1197,16 +1197,16 @@ def sft_loss(model: GPT, input_ids: Tensor, loss_mask: Tensor) -> Tensor:
     """Compute cross-entropy loss averaged over ASSISTANT tokens only.
 
     Dividing by mask.sum() (not seq_len) ensures long prompts don't dilute
-    the gradient signal — the loss is always the average over assistant tokens
+    the gradient signal - the loss is always the average over assistant tokens
     regardless of how much prompt precedes them.
     """
     B, T = input_ids.shape
     vocab_size = model.config.vocab_size
 
     logits  = model(input_ids)             # (B, T, vocab_size)
-    logits  = logits[:, :-1, :].contiguous()   # (B, T-1, vocab_size) — drop last
-    targets = input_ids[:, 1:].contiguous()    # (B, T-1) — shift left
-    mask    = loss_mask[:, 1:].contiguous()    # (B, T-1) — align with targets
+    logits  = logits[:, :-1, :].contiguous()   # (B, T-1, vocab_size) - drop last
+    targets = input_ids[:, 1:].contiguous()    # (B, T-1) - shift left
+    mask    = loss_mask[:, 1:].contiguous()    # (B, T-1) - align with targets
 
     per_token_loss = F.cross_entropy(
         logits.view(-1, vocab_size),
@@ -1323,7 +1323,7 @@ git commit -m "feat: SFT loss with assistant-token masking + training loop (TDD)
 
 ---
 
-### Task 10: sft/validate.py — Loss curve comparison vs reference
+### Task 10: sft/validate.py - Loss curve comparison vs reference
 
 **Files:**
 - Create: `sft/validate.py`
@@ -1377,7 +1377,7 @@ def compare(our_log: list[dict], ref_log: list[dict]):
     if passed:
         print("✓ SFT loss curves match reference within tolerance.")
     else:
-        print("✗ Curves diverged — check mask, averaging, or optimizer.")
+        print("✗ Curves diverged - check mask, averaging, or optimizer.")
     return passed
 
 if __name__ == "__main__":
@@ -1390,19 +1390,19 @@ if __name__ == "__main__":
 
 ```bash
 git add sft/validate.py
-git commit -m "feat: SFT validation — loss curve comparison vs nanochat-mlx reference"
+git commit -m "feat: SFT validation - loss curve comparison vs nanochat-mlx reference"
 ```
 
 ---
 
-### Task 11: rl/reward.py — Rule-based reward
+### Task 11: rl/reward.py - Rule-based reward
 
 **Files:**
 - Create: `rl/reward.py`
 - Create: `tests/test_reward.py`
 
 **Interfaces:**
-- Produces: `compute_reward(completion: str) -> float` — returns value in [0, 1]
+- Produces: `compute_reward(completion: str) -> float` - returns value in [0, 1]
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1427,7 +1427,7 @@ def test_reward_bounded_between_0_and_1():
         assert 0.0 <= r <= 1.0, f"reward {r} out of [0,1] for: {text!r}"
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_reward.py -v
@@ -1448,7 +1448,7 @@ def extract_ngrams(text: str, n: int) -> list[tuple[str, ...]]:
 def compute_reward(completion: str) -> float:
     """Rule-based reward for TinyShakespeare completions.
 
-    Deterministic and unit-testable — avoids needing a trained reward model.
+    Deterministic and unit-testable - avoids needing a trained reward model.
     Returns a float in [0, 1].
     """
     if not completion.strip():
@@ -1474,7 +1474,7 @@ def compute_reward(completion: str) -> float:
     return float(np.clip(reward, 0.0, 1.0))
 ```
 
-- [ ] **Step 4: Run — expect all pass**
+- [ ] **Step 4: Run - expect all pass**
 
 ```bash
 uv run pytest tests/test_reward.py -v
@@ -1491,7 +1491,7 @@ git commit -m "feat: rule-based RL reward with repetition penalty (TDD)"
 
 ---
 
-### Task 12: rl/trainer.py — REINFORCE + KL penalty
+### Task 12: rl/trainer.py - REINFORCE + KL penalty
 
 **Files:**
 - Create: `rl/trainer.py`
@@ -1535,7 +1535,7 @@ def test_rl_config_defaults():
     assert cfg.lr == 1e-5
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_rl_trainer.py -v
@@ -1562,7 +1562,7 @@ DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
 @dataclass
 class RLConfig:
     G:         int   = 8      # completions per prompt
-    kl_coeff:  float = 0.1    # weight on KL penalty — prevents reward hacking
+    kl_coeff:  float = 0.1    # weight on KL penalty - prevents reward hacking
     lr:        float = 1e-5
     max_steps: int   = 500
     max_new_tokens: int = 64
@@ -1718,7 +1718,7 @@ git commit -m "feat: REINFORCE RL loop with group-relative advantage + KL penalt
 
 ---
 
-### Task 13: inference/generate.py — Naive + KV-cache generation
+### Task 13: inference/generate.py - Naive + KV-cache generation
 
 **Files:**
 - Create: `inference/generate.py`
@@ -1769,7 +1769,7 @@ def test_cached_is_faster(benchmark=None):
     assert len(out) == 24
 ```
 
-- [ ] **Step 2: Run — expect ImportError**
+- [ ] **Step 2: Run - expect ImportError**
 
 ```bash
 uv run pytest tests/test_inference.py -v
@@ -1923,7 +1923,7 @@ git commit -m "feat: naive + KV-cache generation with parity test (TDD)"
 
 ---
 
-### Task 14: inference/kvcache.py — Adapter to existing kvcache project
+### Task 14: inference/kvcache.py - Adapter to existing kvcache project
 
 **Files:**
 - Create: `inference/kvcache.py`
@@ -1990,7 +1990,7 @@ def generate_with_eviction(
     ids = prompt_ids.unsqueeze(0)   # (1, T)
 
     with torch.no_grad():
-        _ = model(ids)   # prefill — populates initial attention states
+        _ = model(ids)   # prefill - populates initial attention states
 
         generated = []
         last_tok = ids[:, -1:]
@@ -2021,7 +2021,7 @@ Expected: 1 passed.
 
 ```bash
 git add inference/kvcache.py tests/test_kvcache_adapter.py
-git commit -m "feat: kvcache adapter — connects GPT inference to existing kvcache project"
+git commit -m "feat: kvcache adapter - connects GPT inference to existing kvcache project"
 ```
 
 ---
@@ -2090,7 +2090,7 @@ N_RUNS      = 5
 DEVICE      = "mps" if torch.backends.mps.is_available() else "cpu"
 
 def measure(fn, model, prompt, label):
-    # Warm up MPS JIT — first call is always slow
+    # Warm up MPS JIT - first call is always slow
     fn(model, prompt, max_new=8, temperature=0.0)
     times = []
     for _ in range(N_RUNS):
@@ -2106,7 +2106,7 @@ model = GPT(GPT2_CONFIG).to(DEVICE)
 model.eval()
 prompt = torch.randint(0, 50257, (PROMPT_LEN,)).to(DEVICE)
 
-print(f"\nThroughput benchmark — {DEVICE} | GPT-2 small (124M) | prompt={PROMPT_LEN} | gen={MAX_NEW}")
+print(f"\nThroughput benchmark - {DEVICE} | GPT-2 small (124M) | prompt={PROMPT_LEN} | gen={MAX_NEW}")
 print("-" * 65)
 tps_naive  = measure(generate_naive,  model, prompt, "naive (no cache)")
 tps_cached = measure(generate_cached, model, prompt, "KV-cache")
@@ -2139,7 +2139,7 @@ def eval_perplexity(model: GPT, split: str = "val") -> float:
         losses.append(loss.item())
     return math.exp(sum(losses) / len(losses))
 
-print("\nEval — val-set perplexity per checkpoint (lower = better)")
+print("\nEval - val-set perplexity per checkpoint (lower = better)")
 print("-" * 50)
 
 for name, path in [
@@ -2153,14 +2153,14 @@ for name, path in [
         ppl = eval_perplexity(model)
         print(f"  {name:<25} perplexity = {ppl:.2f}")
     except FileNotFoundError:
-        print(f"  {name:<25} (checkpoint not found — run training first)")
+        print(f"  {name:<25} (checkpoint not found - run training first)")
 ```
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add benchmarks/loss_curves.py benchmarks/throughput.py benchmarks/eval.py
-git commit -m "feat: benchmarks — loss curves, throughput (naive vs KV-cache), eval perplexity"
+git commit -m "feat: benchmarks - loss curves, throughput (naive vs KV-cache), eval perplexity"
 ```
 
 ---
@@ -2184,7 +2184,7 @@ uv add --optional dev jupytext
 
 ```python
 # %% [markdown]
-# # 01 — Tokenization
+# # 01 - Tokenization
 # Connects to the bpe-tokenizer project. Shows WHY tokenization matters.
 
 # %%
@@ -2195,7 +2195,7 @@ enc = tiktoken.get_encoding("gpt2")
 
 # %% [markdown]
 # ## The leading-space difference
-# "hello" and " hello" are DIFFERENT tokens — GPT-2 was trained this way.
+# "hello" and " hello" are DIFFERENT tokens - GPT-2 was trained this way.
 
 # %%
 print(enc.encode("hello"))    # [31373]
@@ -2212,7 +2212,7 @@ for s in ["Hello, world!", "2+2=4", "日本語テスト", "🎉🔥"]:
     print(f"  {s!r:30s} → {ids}")
 
 # %% [markdown]
-# ## Tokenization of numbers — why LLMs struggle with arithmetic
+# ## Tokenization of numbers - why LLMs struggle with arithmetic
 
 # %%
 for n in ["100", "1000", "10000", "99999"]:
@@ -2224,7 +2224,7 @@ for n in ["100", "1000", "10000", "99999"]:
 
 ```python
 # %% [markdown]
-# # 02 — Attention from Scratch
+# # 02 - Attention from Scratch
 # Implements scaled dot-product attention step by step.
 
 # %%
@@ -2244,7 +2244,7 @@ K = torch.randn(T, d_k)
 V = torch.randn(T, d_k)
 
 # %% [markdown]
-# ## Step 2: Scaled dot-product — WHY we scale by sqrt(d_k)
+# ## Step 2: Scaled dot-product - WHY we scale by sqrt(d_k)
 
 # %%
 scores_unscaled = Q @ K.T
@@ -2256,7 +2256,7 @@ print(f"\nUnscaled softmax (first row): {torch.softmax(scores_unscaled[0], dim=-
 print(f"Scaled   softmax (first row): {torch.softmax(scores_scaled[0],   dim=-1).round(decimals=2)}")
 
 # %% [markdown]
-# ## Step 3: Causal mask — prevent attending to future tokens
+# ## Step 3: Causal mask - prevent attending to future tokens
 
 # %%
 mask = torch.tril(torch.ones(T, T))
@@ -2281,7 +2281,7 @@ plt.show()
 
 ```python
 # %% [markdown]
-# # 03 — Transformer Architecture
+# # 03 - Transformer Architecture
 # Builds the full block and verifies residual connections.
 
 # %%
@@ -2293,7 +2293,7 @@ CFG = GPTConfig(n_layer=2, n_head=4, n_embd=64, block_size=16, vocab_size=100)
 block = TransformerBlock(CFG)
 
 # %% [markdown]
-# ## Residual connections — the gradient highway
+# ## Residual connections - the gradient highway
 
 # %%
 torch.manual_seed(0)
@@ -2335,7 +2335,7 @@ Expected: 3 notebooks execute without errors.
 
 ```bash
 git add notebooks/
-git commit -m "feat: notebooks 01-03 — tokenization, attention, transformer (runnable)"
+git commit -m "feat: notebooks 01-03 - tokenization, attention, transformer (runnable)"
 ```
 
 ---
@@ -2352,7 +2352,7 @@ git commit -m "feat: notebooks 01-03 — tokenization, attention, transformer (r
 
 ```python
 # %% [markdown]
-# # 04 — Pretraining
+# # 04 - Pretraining
 # Shows the training loop and loss curve on TinyShakespeare.
 
 # %%
@@ -2400,7 +2400,7 @@ print(enc.decode(out.tolist()))
 
 ```python
 # %% [markdown]
-# # 05 — Supervised Fine-Tuning (YOUR Reimplement)
+# # 05 - Supervised Fine-Tuning (YOUR Reimplement)
 # Shows the loss mask side-by-side with tokens. This is the differentiator.
 
 # %%
@@ -2411,7 +2411,7 @@ from sft.data import format_conversation, build_batch
 enc = tiktoken.get_encoding("gpt2")
 
 # %% [markdown]
-# ## Visualise the loss mask — the most important concept in SFT
+# ## Visualise the loss mask - the most important concept in SFT
 
 # %%
 convo = [
@@ -2432,7 +2432,7 @@ for i, (tok_id, m) in enumerate(zip(ids[:60], mask[:60])):
     print(f"{tok:>12}  {tok_id:>6}  {m:>6.1f}  {trains}")
 
 # %% [markdown]
-# ## Before vs after masking — loss comparison
+# ## Before vs after masking - loss comparison
 
 # %%
 from model.config import GPT2_CONFIG
@@ -2459,7 +2459,7 @@ except FileNotFoundError:
 
 ```python
 # %% [markdown]
-# # 06 — Reinforcement Learning
+# # 06 - Reinforcement Learning
 # Shows reward curve, KL divergence, and a reward-hacking example.
 
 # %%
@@ -2482,7 +2482,7 @@ except FileNotFoundError:
     print("Run rl/trainer.py first.")
 
 # %% [markdown]
-# ## Group-relative advantage — why we normalise rewards within the group
+# ## Group-relative advantage - why we normalise rewards within the group
 
 # %%
 import numpy as np
@@ -2491,14 +2491,14 @@ advantages  = (rewards_raw - rewards_raw.mean()) / (rewards_raw.std() + 1e-8)
 print("Raw rewards:       ", rewards_raw.round(2))
 print("Group advantages:  ", advantages.round(2))
 print("Mean reward:       ", rewards_raw.mean().round(3))
-# Advantages sum to ~0 — the model updates toward above-average completions
+# Advantages sum to ~0 - the model updates toward above-average completions
 ```
 
 - [ ] **Step 4: Create notebooks/07_inference.py**
 
 ```python
 # %% [markdown]
-# # 07 — Inference + KV-Cache
+# # 07 - Inference + KV-Cache
 # Compares naive vs cached generation. Shows the speedup.
 
 # %%
@@ -2560,7 +2560,7 @@ uv run jupyter nbconvert --to notebook --execute 05_sft.ipynb --output 05_sft.ip
 
 ```bash
 git add notebooks/
-git commit -m "feat: notebooks 04-07 — pretraining, SFT, RL, inference (runnable)"
+git commit -m "feat: notebooks 04-07 - pretraining, SFT, RL, inference (runnable)"
 ```
 
 ---
@@ -2572,7 +2572,7 @@ git commit -m "feat: notebooks 04-07 — pretraining, SFT, RL, inference (runnab
 - Create: `RESUME_ADDITIONS.txt`
 - Create: `README.md`
 
-- [ ] **Step 1: Create CHALLENGES.md (template — fill in real bugs as you encounter them)**
+- [ ] **Step 1: Create CHALLENGES.md (template - fill in real bugs as you encounter them)**
 
 ```markdown
 # CHALLENGES.md
@@ -2586,7 +2586,7 @@ These are interview-ready explanations.
 
 **What broke:** SFT loss was unexpectedly high even on training data.
 
-**Root cause:** `logits[:, :-1]` and `targets[:, 1:]` were not aligned — the logit at position `t` predicts position `t+1`, so both must be shifted.
+**Root cause:** `logits[:, :-1]` and `targets[:, 1:]` were not aligned - the logit at position `t` predicts position `t+1`, so both must be shifted.
 
 **Fix:**
 ```python
@@ -2601,17 +2601,17 @@ mask    = loss_mask[:, 1:]     # (B, T-1) ← shifted to match targets
 
 ## Challenge 2: `mask.sum()` vs `seq_len` in SFT denominator
 
-**What broke:** SFT loss was very small for conversations with long prompts and short answers — the gradient signal was being diluted.
+**What broke:** SFT loss was very small for conversations with long prompts and short answers - the gradient signal was being diluted.
 
-**Root cause:** Dividing by `seq_len` instead of `mask.sum()`. A 500-token prompt + 10-token answer means only 10 tokens contribute to the numerator, but the denominator was 510 — a 51× dilution.
+**Root cause:** Dividing by `seq_len` instead of `mask.sum()`. A 500-token prompt + 10-token answer means only 10 tokens contribute to the numerator, but the denominator was 510 - a 51× dilution.
 
 **Fix:** `return (per_token * mask).sum() / mask.sum()`
 
-**Key lesson:** The denominator of the loss controls the effective learning rate. An incorrect denominator is as bad as the wrong learning rate — and harder to detect.
+**Key lesson:** The denominator of the loss controls the effective learning rate. An incorrect denominator is as bad as the wrong learning rate - and harder to detect.
 
 ---
 
-## Challenge 3: GPT-2 weight loading — Conv1D transpose
+## Challenge 3: GPT-2 weight loading - Conv1D transpose
 
 **What broke:** Model generated nonsense after loading GPT-2 weights.
 
@@ -2644,7 +2644,7 @@ _ = model(dummy_input)   # warm up MPS JIT
 
 ---
 
-## Challenge 5: RL NaN loss — empty completion
+## Challenge 5: RL NaN loss - empty completion
 
 **What broke:** RL training produced NaN loss after ~50 steps.
 
@@ -2653,10 +2653,10 @@ _ = model(dummy_input)   # warm up MPS JIT
 **Fix:** Added a minimum-length check in `_sample`:
 ```python
 if len(generated) == 0:
-    return " "   # fallback — score will be 0, which is valid
+    return " "   # fallback - score will be 0, which is valid
 ```
 
-**Key lesson:** RL loops fail silently — the loss becomes NaN and training appears to continue. Always add `assert not torch.isnan(loss)` at each step during development.
+**Key lesson:** RL loops fail silently - the loss becomes NaN and training appears to continue. Always add `assert not torch.isnan(loss)` at each step during development.
 ```
 
 - [ ] **Step 2: Create RESUME_ADDITIONS.txt**
@@ -2670,7 +2670,7 @@ if len(generated) == 0:
 
 ## Resume bullets (pick 2-3, fill in actual numbers)
 
-- Implemented the GPT-2 transformer architecture from scratch in PyTorch — multi-head causal attention, Pre-LN residual blocks, weight tying — and pretrained it on TinyShakespeare using cosine LR scheduling and gradient accumulation.
+- Implemented the GPT-2 transformer architecture from scratch in PyTorch - multi-head causal attention, Pre-LN residual blocks, weight tying - and pretrained it on TinyShakespeare using cosine LR scheduling and gradient accumulation.
 
 - Reimplemented the SFT training loop from scratch including ChatML conversation formatting and loss masking on assistant turns only; validated loss curves within [X]% of the nanochat-mlx reference.
 
@@ -2682,10 +2682,10 @@ if len(generated) == 0:
 PyTorch, transformer architecture, multi-head attention, causal masking, supervised fine-tuning (SFT), RLHF, REINFORCE, KV-cache, weight tying, gradient accumulation, cosine LR scheduling, mixed precision, tokenization (BPE), GPT-2, Apple Silicon MPS, MLX, from-scratch implementation, loss masking, ChatML, group-relative advantage, KL divergence, policy gradient
 
 ## Interview talking points
-1. "I implemented scaled dot-product attention from scratch — the key insight is scaling by sqrt(d_k) to prevent softmax saturation."
-2. "In SFT, you only compute loss on assistant tokens. The denominator must be mask.sum(), not seq_len — otherwise long prompts dilute the gradient."
+1. "I implemented scaled dot-product attention from scratch - the key insight is scaling by sqrt(d_k) to prevent softmax saturation."
+2. "In SFT, you only compute loss on assistant tokens. The denominator must be mask.sum(), not seq_len - otherwise long prompts dilute the gradient."
 3. "KV-cache reduces generation from O(T²) to O(T) by storing the K and V tensors for all prior tokens and only processing the new token each step."
-4. "Group-relative advantage normalizes rewards within a group of completions — (r - mean)/std — so the training signal is always meaningful regardless of absolute reward scale."
+4. "Group-relative advantage normalizes rewards within a group of completions - (r - mean)/std - so the training signal is always meaningful regardless of absolute reward scale."
 ```
 
 - [ ] **Step 3: Create README.md (fill benchmark numbers after training)**
@@ -2693,7 +2693,7 @@ PyTorch, transformer architecture, multi-head attention, causal masking, supervi
 ```markdown
 # nanochat
 
-Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → transformer architecture → pretraining → SFT → RL → KV-cache inference — on Apple M2 Pro.
+Full ChatGPT-style pipeline implemented from scratch - BPE tokenization → transformer architecture → pretraining → SFT → RL → KV-cache inference - on Apple M2 Pro.
 
 **Series:** Project #2 of 8 | Builds on: [bpe-tokenizer](../bpe-tokenizer) · [kvcache](../kvcache)
 
@@ -2705,7 +2705,7 @@ Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → tr
 |---|---|---|
 | Transformer architecture | From scratch in PyTorch | ✓ |
 | Pretraining (TinyShakespeare) | From scratch | ✓ |
-| SFT loop | **From scratch — primary differentiator** | ✓ |
+| SFT loop | **From scratch - primary differentiator** | ✓ |
 | RL (REINFORCE + KL) | From scratch | ✓ |
 | KV-cache inference | Adapted from kvcache project | ✓ |
 | Chat UI | nanochat-mlx reference | ✓ |
@@ -2721,7 +2721,7 @@ Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → tr
 | Stage | Final train loss | Final val loss |
 |---|---|---|
 | Pretrain (TinyShakespeare, 5K steps) | [X.XX] | [X.XX] |
-| SFT (Alpaca, 3 epochs) | [X.XX] | — |
+| SFT (Alpaca, 3 epochs) | [X.XX] | - |
 
 ### Inference throughput
 
@@ -2729,7 +2729,7 @@ Full ChatGPT-style pipeline implemented from scratch — BPE tokenization → tr
 |---|---|---|
 | Naive (O(T²)) | [X] tok/s | 1.0× |
 | KV-cache (O(T)) | [X] tok/s | [N]× |
-| MLX (nanochat-mlx reference) | [X] tok/s | — |
+| MLX (nanochat-mlx reference) | [X] tok/s | - |
 
 ### Eval perplexity (val split)
 
@@ -2803,11 +2803,11 @@ uv run pytest tests/ -v --tb=short
 
 ## Key design decisions
 
-**Why SFT divides by `mask.sum()` not `seq_len`:** Prevents long prompts from diluting the gradient signal. The model trains on assistant tokens only — averaging over them (not over the full sequence) keeps the effective learning rate constant regardless of prompt length.
+**Why SFT divides by `mask.sum()` not `seq_len`:** Prevents long prompts from diluting the gradient signal. The model trains on assistant tokens only - averaging over them (not over the full sequence) keeps the effective learning rate constant regardless of prompt length.
 
 **Why we scale attention by `√d_k`:** Dot products grow in variance proportional to `d_k`. Without scaling, softmax saturates and attention collapses to one token ("hard" attention). Scaling keeps the distribution spread.
 
-**Why KV-cache is O(T) not O(T²):** Each new token only needs to attend to prior tokens — their K, V matrices are cached. Without a cache, every generation step re-computes attention over the entire prior context.
+**Why KV-cache is O(T) not O(T²):** Each new token only needs to attend to prior tokens - their K, V matrices are cached. Without a cache, every generation step re-computes attention over the entire prior context.
 
 **Why group-relative advantage in RL:** Raw rewards have no consistent scale across prompts. Normalising within the group `(r - mean)/std` makes "this completion was 1.5σ above average" a stable, comparable signal.
 ```
@@ -2847,9 +2847,9 @@ git commit -m "docs: CHALLENGES.md, RESUME_ADDITIONS.txt, README with benchmark 
 All spec requirements covered. No gaps found.
 
 **Type consistency check:**
-- `sft_loss(model: GPT, input_ids: Tensor, loss_mask: Tensor) -> Tensor` — consistent Tasks 8, 9
-- `get_log_probs(model: GPT, token_ids: Tensor) -> Tensor` — consistent Tasks 12, 13
+- `sft_loss(model: GPT, input_ids: Tensor, loss_mask: Tensor) -> Tensor` - consistent Tasks 8, 9
+- `get_log_probs(model: GPT, token_ids: Tensor) -> Tensor` - consistent Tasks 12, 13
 - `generate_naive` / `generate_cached` signatures match between Tasks 13, 15, 17
-- `build_batch` returns `tuple[Tensor, Tensor] | None` — consistent Tasks 8, 9, 17
+- `build_batch` returns `tuple[Tensor, Tensor] | None` - consistent Tasks 8, 9, 17
 
 **Placeholder scan:** No TBD, TODO, or vague steps found. All code blocks are complete.

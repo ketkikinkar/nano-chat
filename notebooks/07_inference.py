@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 07 — Inference + KV-Cache
+# # 07 - Inference + KV-Cache
 # Compares naive vs cached generation. Shows the speedup.
 
 # %%

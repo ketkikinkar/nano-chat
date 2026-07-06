@@ -1,4 +1,4 @@
-"""SFT training loop — the primary differentiator of this project."""
+"""SFT training loop - the primary differentiator of this project."""
 from __future__ import annotations
 import os, math, json
 import torch
@@ -22,16 +22,16 @@ def sft_loss(model: GPT, input_ids: Tensor, loss_mask: Tensor) -> Tensor:
     """Compute cross-entropy loss averaged over ASSISTANT tokens only.
 
     Dividing by mask.sum() (not seq_len) ensures long prompts don't dilute
-    the gradient signal — the loss is always the average over assistant tokens
+    the gradient signal - the loss is always the average over assistant tokens
     regardless of how much prompt precedes them.
     """
     B, T = input_ids.shape
     vocab_size = model.config.vocab_size
 
     logits  = model(input_ids)             # (B, T, vocab_size)
-    logits  = logits[:, :-1, :].contiguous()   # (B, T-1, vocab_size) — drop last
-    targets = input_ids[:, 1:].contiguous()    # (B, T-1) — shift left
-    mask    = loss_mask[:, 1:].contiguous()    # (B, T-1) — align with targets
+    logits  = logits[:, :-1, :].contiguous()   # (B, T-1, vocab_size) - drop last
+    targets = input_ids[:, 1:].contiguous()    # (B, T-1) - shift left
+    mask    = loss_mask[:, 1:].contiguous()    # (B, T-1) - align with targets
 
     per_token_loss = F.cross_entropy(
         logits.view(-1, vocab_size),

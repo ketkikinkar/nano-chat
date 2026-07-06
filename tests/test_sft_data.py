@@ -21,9 +21,9 @@ def test_format_contains_special_tokens():
 def test_loss_mask_only_on_assistant_tokens():
     input_ids, loss_mask = build_batch([SAMPLE_CONVO], ENC, block_size=128)
     # mask must be 1.0 on SOME tokens (the assistant response)
-    assert loss_mask.sum() > 0, "loss mask is all zeros — no assistant tokens masked"
+    assert loss_mask.sum() > 0, "loss mask is all zeros - no assistant tokens masked"
     # mask must NOT cover all tokens (prompt tokens should be 0)
-    assert loss_mask.sum() < loss_mask.numel(), "loss mask covers everything — prompt not excluded"
+    assert loss_mask.sum() < loss_mask.numel(), "loss mask covers everything - prompt not excluded"
 
 
 def test_loss_mask_dtype():
@@ -34,7 +34,7 @@ def test_loss_mask_dtype():
 def test_empty_assistant_turn_skipped():
     bad_convo = [
         {"role": "user",      "content": "Hello?"},
-        {"role": "assistant", "content": ""},   # empty — should be skipped
+        {"role": "assistant", "content": ""},   # empty - should be skipped
     ]
     result = build_batch([bad_convo], ENC, block_size=128)
     assert result is None, "expected None for empty assistant turn"

@@ -14,7 +14,7 @@ def extract_ngrams(text: str, n: int) -> list[tuple[str, ...]]:
 def compute_reward(completion: str) -> float:
     """Rule-based reward for TinyShakespeare completions.
 
-    Deterministic and unit-testable — avoids needing a trained reward model.
+    Deterministic and unit-testable - avoids needing a trained reward model.
     Returns a float in [0, 1].
 
     Rewards proper sentence endings (+0.5) and reasonable length (+0.2).

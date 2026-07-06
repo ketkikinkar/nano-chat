@@ -1,4 +1,4 @@
-# nanochat — Design Spec
+# nanochat - Design Spec
 **Date:** 2026-06-29
 **Hardware:** Apple M2 Pro, 16 GB unified memory
 **Framework:** PyTorch (MPS backend) primary · MLX comparison track
@@ -37,11 +37,11 @@ Build and understand the entire lifecycle of a ChatGPT-style assistant by:
 - CHALLENGES.md, RESUME_ADDITIONS.txt, README
 
 **Out of scope:**
-- Distributed training (torchrun, DDP) — single M2 Pro
-- FineWeb full dataset pretraining — use TinyShakespeare or 10M-token slice
-- Learned reward model — rule-based reward only
+- Distributed training (torchrun, DDP) - single M2 Pro
+- FineWeb full dataset pretraining - use TinyShakespeare or 10M-token slice
+- Learned reward model - rule-based reward only
 - Production serving, auth, scaling
-- RLHF with PPO — REINFORCE-style only
+- RLHF with PPO - REINFORCE-style only
 
 **Stretch goals:**
 - Implement FlashAttention manually and compare memory/speed
@@ -115,7 +115,7 @@ nanochat/
 
 ### 5.1 `model/config.py`
 
-Two configs — one per track:
+Two configs - one per track:
 
 ```python
 @dataclass
@@ -124,7 +124,7 @@ class GPTConfig:
     n_head:     int   = 12
     n_embd:     int   = 768
     vocab_size: int   = 50257
-    block_size: int   = 512    # halved from GPT-2's 1024 — fits 16 GB with optimizer states
+    block_size: int   = 512    # halved from GPT-2's 1024 - fits 16 GB with optimizer states
     dropout:    float = 0.1
 
 # Track 1 (tiny from-scratch on TinyShakespeare)
@@ -134,7 +134,7 @@ TINY_CONFIG = GPTConfig(n_layer=6, n_head=6, n_embd=384, block_size=256)  # ~20M
 GPT2_CONFIG = GPTConfig(n_layer=12, n_head=12, n_embd=768, block_size=512)  # 124M params
 ```
 
-### 5.2 `model/attention.py` — MultiHeadAttention
+### 5.2 `model/attention.py` - MultiHeadAttention
 
 **Data flow:**
 ```
@@ -151,13 +151,13 @@ x: (B, T, C)
 **Key decisions:**
 - Scale by `√head_dim`: prevents softmax saturation when head_dim is large
 - Causal mask registered as buffer (`torch.tril`): moves to device with model, not a learned parameter
-- Combined QKV projection (`3*C` out) then split: one matmul instead of three — faster on MPS
+- Combined QKV projection (`3*C` out) then split: one matmul instead of three - faster on MPS
 
 **Edge cases:**
 - `T > block_size` at inference: slice mask to `[:T, :T]`, assert `T <= block_size`
 - `head_dim` must be integer: assert `n_embd % n_head == 0` in `__init__`
 
-### 5.3 `model/blocks.py` — TransformerBlock
+### 5.3 `model/blocks.py` - TransformerBlock
 
 ```python
 def forward(self, x):
@@ -172,7 +172,7 @@ def forward(self, x):
 - MLP expansion factor 4× (`n_embd → 4*n_embd → n_embd`): empirically optimal for GPT-class models
 - GELU activation (not ReLU): smoother gradient flow; GPT-2 standard
 
-### 5.4 `model/gpt.py` — Full GPT
+### 5.4 `model/gpt.py` - Full GPT
 
 **Weight tying:** `lm_head.weight = wte.weight`
 - Saves ~38M parameters
@@ -225,12 +225,12 @@ def get_lr(step):
 ```
 
 **Edge cases:**
-- First MPS call is slow (JIT compilation) — warm up before timing benchmarks
+- First MPS call is slow (JIT compilation) - warm up before timing benchmarks
 - `set_to_none=True` in `zero_grad`: frees memory immediately rather than zeroing
 
 ---
 
-### 5.7 `sft/data.py` — ChatML format + loss mask
+### 5.7 `sft/data.py` - ChatML format + loss mask
 
 **Conversation format:**
 ```
@@ -254,7 +254,7 @@ for turn in conversation:
 2. `mask.sum() == 0`: empty assistant turn → skip sample, do not compute loss
 3. Sequence longer than `block_size`: truncate left, then re-check mask is nonzero
 
-### 5.8 `sft/trainer.py` — SFT loss (THE DIFFERENTIATOR)
+### 5.8 `sft/trainer.py` - SFT loss (THE DIFFERENTIATOR)
 
 ```python
 def sft_loss(model, input_ids, loss_mask):
@@ -279,7 +279,7 @@ def sft_loss(model, input_ids, loss_mask):
 1. Load identical checkpoint + data + optimizer state in both your trainer and reference
 2. Run 100 steps each, record per-step loss
 3. Assert curves within 1e-3 tolerance
-4. If diverged: bisect — masking, averaging, or optimizer?
+4. If diverged: bisect - masking, averaging, or optimizer?
 
 ---
 
@@ -300,7 +300,7 @@ def compute_reward(completion: str) -> float:
 
 **Unit tests required before running RL:** perfect completion, empty completion, pure repetition, punctuation-only.
 
-### 5.11 `rl/trainer.py` — REINFORCE + KL penalty
+### 5.11 `rl/trainer.py` - REINFORCE + KL penalty
 
 ```python
 def rl_step(model, ref_model, prompt_tokens, config):
@@ -362,7 +362,7 @@ KVCache = list[tuple[torch.Tensor, torch.Tensor]]
 
 **Edge cases:**
 - Cache full at `block_size`: stop generation or implement sliding-window eviction
-- `temperature=0`: argmax (greedy, deterministic) — use for benchmarking reproducibility
+- `temperature=0`: argmax (greedy, deterministic) - use for benchmarking reproducibility
 - MPS JIT warmup: run one dummy generation before timing
 
 ### 5.13 `inference/kvcache.py`

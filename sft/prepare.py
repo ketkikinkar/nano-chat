@@ -1,6 +1,6 @@
 """Run once: uv run python sft/prepare.py
 
-Downloads the Stanford Alpaca dataset — the original 52K instruction-following
+Downloads the Stanford Alpaca dataset - the original 52K instruction-following
 examples used to fine-tune LLaMA into Alpaca. Stored locally so training can
 run offline and deterministically after the one-time download.
 """

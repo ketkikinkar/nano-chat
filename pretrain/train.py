@@ -22,7 +22,7 @@ DEVICE           = "mps" if torch.backends.mps.is_available() else "cpu"
 # ──────────────────────────────────────────────────────────────────────────────
 
 def get_lr(step: int) -> float:
-    # Linear warmup then cosine decay — standard for transformer pretraining
+    # Linear warmup then cosine decay - standard for transformer pretraining
     if step < WARMUP_STEPS:
         return MAX_LR * step / WARMUP_STEPS
     if step > MAX_STEPS:

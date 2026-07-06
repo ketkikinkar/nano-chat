@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 03 — Transformer Architecture
+# # 03 - Transformer Architecture
 # Builds the full block and verifies residual connections.
 
 # %%
@@ -11,7 +11,7 @@ CFG = GPTConfig(n_layer=2, n_head=4, n_embd=64, block_size=16, vocab_size=100)
 block = TransformerBlock(CFG)
 
 # %% [markdown]
-# ## Residual connections — the gradient highway
+# ## Residual connections - the gradient highway
 
 # %%
 torch.manual_seed(0)

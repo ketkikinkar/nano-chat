@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from tiktoken import Encoding
 
-# ChatML special tokens — used by nanochat and many open models (e.g. ChatGPT, Mistral)
+# ChatML special tokens - used by nanochat and many open models (e.g. ChatGPT, Mistral)
 IM_START = "<|im_start|>"
 IM_END   = "<|im_end|>"
 
@@ -13,7 +13,7 @@ def format_conversation(turns: list[dict]) -> str:
     """Format a list of {role, content} dicts into a ChatML string.
 
     Each turn becomes: <|im_start|>role\ncontent<|im_end|>\n
-    This is the de-facto standard for instruction-tuned models — structuring
+    This is the de-facto standard for instruction-tuned models - structuring
     the dialogue so the model learns role boundaries from the tokens themselves.
     """
     parts = []
@@ -38,7 +38,7 @@ def build_batch(
     for turns in conversations:
         ids, mask = _encode_with_mask(turns, tokenizer, block_size)
         if ids is None:
-            # Bail out early — a NaN-producing sample contaminates the whole batch
+            # Bail out early - a NaN-producing sample contaminates the whole batch
             return None
         all_ids.append(ids)
         all_masks.append(mask)
@@ -56,7 +56,7 @@ def _encode_with_mask(
 ) -> tuple[np.ndarray, np.ndarray] | tuple[None, None]:
     """Encode one conversation and return (token_ids, loss_mask).
 
-    The loss mask is 1.0 only on assistant *content* tokens — the model should
+    The loss mask is 1.0 only on assistant *content* tokens - the model should
     only be penalised for what it generates, not for the user prompt or the
     ChatML scaffolding tokens (headers / footers).
     """
@@ -74,7 +74,7 @@ def _encode_with_mask(
 
         is_assistant = (turn["role"] == "assistant")
 
-        # Headers and footers are structural scaffolding — never compute loss on them
+        # Headers and footers are structural scaffolding - never compute loss on them
         h_mask = [0.0] * len(h_ids)
         # Only grade the model on its own outputs (assistant turns)
         c_mask = [1.0 if is_assistant else 0.0] * len(c_ids)
@@ -83,7 +83,7 @@ def _encode_with_mask(
         ids  += h_ids + c_ids + f_ids
         mask += h_mask + c_mask + f_mask
 
-    # Guard: if no assistant content exists, loss = 0/0 = NaN — skip this sample
+    # Guard: if no assistant content exists, loss = 0/0 = NaN - skip this sample
     if sum(mask) == 0:
         return None, None
 

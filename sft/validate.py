@@ -34,7 +34,7 @@ def compare(our_log: list[dict], ref_log: list[dict]):
     if passed:
         print("✓ SFT loss curves match reference within tolerance.")
     else:
-        print("✗ Curves diverged — check mask, averaging, or optimizer.")
+        print("✗ Curves diverged - check mask, averaging, or optimizer.")
     return passed
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 02 — Attention from Scratch
+# # 02 - Attention from Scratch
 # Implements scaled dot-product attention step by step.
 
 # %%
@@ -19,7 +19,7 @@ K = torch.randn(T, d_k)
 V = torch.randn(T, d_k)
 
 # %% [markdown]
-# ## Step 2: Scaled dot-product — WHY we scale by sqrt(d_k)
+# ## Step 2: Scaled dot-product - WHY we scale by sqrt(d_k)
 
 # %%
 scores_unscaled = Q @ K.T
@@ -31,7 +31,7 @@ print(f"\nUnscaled softmax (first row): {torch.softmax(scores_unscaled[0], dim=-
 print(f"Scaled   softmax (first row): {torch.softmax(scores_scaled[0],   dim=-1).round(decimals=2)}")
 
 # %% [markdown]
-# ## Step 3: Causal mask — prevent attending to future tokens
+# ## Step 3: Causal mask - prevent attending to future tokens
 
 # %%
 mask = torch.tril(torch.ones(T, T))

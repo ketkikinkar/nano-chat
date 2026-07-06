@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 04 — Pretraining
+# # 04 - Pretraining
 # Shows the training loop and loss curve on TinyShakespeare.
 
 # %%
